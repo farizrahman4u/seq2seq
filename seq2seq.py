@@ -7,7 +7,7 @@ from lstm_decoder import LSTMDecoder
 
 class Seq2seq(Sequential):
 	def __init__(self, output_dim, hidden_dim,output_length, init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one', activation='tanh', inner_activation='hard_sigmoid',
-                 weights=[None,None], truncate_gradient=-1,
+                 weights=[None,None, None], truncate_gradient=-1,
                  input_dim=None, input_length=None, hidden_state=[None,None], batch_size=None
                  ):
 
@@ -22,10 +22,12 @@ class Seq2seq(Sequential):
 							  inner_activation=inner_activation,weights=weights[2],
 							  truncate_gradient = truncate_gradient, input_length=input_length,
 							  hidden_state=hidden_state[1], batch_size=batch_size, decoder=decoder)
+
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
 
 		if weights[1] is not None:
 			dense.set_weights(weights[1])
+		super(Seq2seq, self).__init__()
 		self.add(encoder)
 		self.add(dense)
 		self.add(decoder)
@@ -33,8 +35,10 @@ class Seq2seq(Sequential):
 		self.encoder = encoder
 		self.dense = dense
 		self.decoder = decoder
-def get_hidden_state(self):
-	return [self.encoder.get_hidden_state(), self.decoder.get_hidden_state()]
+
+
+	def get_hidden_state(self):
+		return [self.encoder.get_hidden_state(), self.decoder.get_hidden_state()]
 
 def set_hidden_state(self, state):
 	self.encoder.set_hidden_state(state[0])
