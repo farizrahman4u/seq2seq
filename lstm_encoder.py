@@ -28,7 +28,7 @@ class LSTMEncoder(StatefulRNN):
         self.batch_size = batch_size
         self.input_dim = input_dim
         self.input_length = input_length
-        self.Decoder = decoder
+        self.decoder = decoder
         if self.input_dim:
             kwargs['input_shape'] = (self.input_length, self.input_dim)
         super(LSTMEncoder, self).__init__(**kwargs)
@@ -113,11 +113,9 @@ class LSTMEncoder(StatefulRNN):
             truncate_gradient=self.truncate_gradient)
         self.updates = ((self.h, outputs[-1][0]),(self.c, outputs[-1][1]) )
         if decoder is not None:
-           	decoder_updates = ((receiver.h, outputs[-1][0]),(receiver.c, outputs[-1][1]))
+           	decoder_updates = ((decoder.h, outputs[-1][0]),(decoder.c, outputs[-1][1]))
            	self.updates += decoder_updates
         return outputs[-1]
-
-
 
     def get_config(self):
         config = {"name": self.__class__.__name__,
@@ -132,5 +130,3 @@ class LSTMEncoder(StatefulRNN):
                   "input_length": self.input_length}
         base_config = super(LSTM, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
-
-
