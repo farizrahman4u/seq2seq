@@ -29,6 +29,8 @@ class LSTMEncoder(StatefulRNN):
         self.input_dim = input_dim
         self.input_length = input_length
         self.decoder = decoder
+        if decoder is not None:
+            decoder.encoder = self
         self.return_sequences = False
         if self.input_dim:
             kwargs['input_shape'] = (self.input_length, self.input_dim)
