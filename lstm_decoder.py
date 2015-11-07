@@ -9,7 +9,7 @@ from ..utils.theano_utils import shared_scalar, shared_zeros, alloc_zeros_matrix
 from ..layers.core import Layer, MaskedLayer
 from six.moves import range
 
-class FeedbackLSTM(Recurrent):
+class LSTMDecoder(Recurrent):
 	   def __init__(self, dim, hidden_dim = None, output_length,
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
@@ -33,7 +33,7 @@ class FeedbackLSTM(Recurrent):
         self.batch_size = batch_size
         self.output_length = output_length
         kwargs['input_shape'] = (dim,)
-        super(FeedbackLSTM, self).__init__(**kwargs)
+        super(LSTMDecoder, self).__init__(**kwargs)
 
     def build(self):
 
