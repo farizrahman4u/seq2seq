@@ -119,8 +119,8 @@ class LSTMDecoder(Recurrent):
             outputs_info=[x_t, self.h, self.h],
             non_sequences=[self.U_i, self.U_f, self.U_o, self.U_c],
             truncate_gradient=self.truncate_gradient)
-            self.updates = ((self.h, outputs[-1][0]),(self.c, outputs[-1][1]) )
-            return outputs
+        self.updates = ((self.h, outputs[-1][0]),(self.c, outputs[-1][1]) )
+        return outputs
 
     def get_config(self):
         config = {"name": self.__class__.__name__,
