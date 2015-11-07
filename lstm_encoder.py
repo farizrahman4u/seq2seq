@@ -10,7 +10,7 @@ from six.moves import range
 from stateful_rnn import StatefulRNN
 
 class LSTMEncoder(StatefulRNN):
- 
+
     def __init__(self, output_dim,
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
