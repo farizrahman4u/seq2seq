@@ -1,5 +1,10 @@
 # seq2seq
 Sequence to Sequence Learning with Keras
 
+**Papers:**
 
-![Seq2Seq](http://i64.tinypic.com/2nqe8go.png[/IMG])
+* [Sequence to Sequence Learning with Neural Networks](http://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf)
+* [A Neural Conversational Model](http://arxiv.org/pdf/1506.05869v1.pdf)
+
+
+![seq2seq](http://i64.tinypic.com/30136te.png)
