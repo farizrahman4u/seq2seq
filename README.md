@@ -37,3 +37,7 @@ model.add(seq2seq)
 * [Numpy](http://www.numpy.org/)
 * [Theano](https://github.com/Theano/Theano) : Do not pip install
 * [Keras](keras.io)
+
+**TODO:**
+
+* Add examples with real datasets
