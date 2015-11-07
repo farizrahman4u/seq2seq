@@ -34,6 +34,6 @@ model.add(seq2seq)
 
 **Requirements:**
 
-*[Numpy](http://www.numpy.org/)
-*[Theano](https://github.com/Theano/Theano) : Do not pip install
-*[Keras](keras.io)
+* [Numpy](http://www.numpy.org/)
+* [Theano](https://github.com/Theano/Theano) : Do not pip install
+* [Keras](keras.io)
