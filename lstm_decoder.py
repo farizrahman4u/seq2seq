@@ -148,22 +148,6 @@ class LSTMDecoder(StatefulRNN):
                 raise Exception("Layer shape %s not compatible with weight shape %s." % (p.eval().shape, w.shape))
             p.set_value(floatX(w))
 
-    def get_hidden_state(self):
-        state = [h.get_value() for h in self.state]
-        return state
-
-    def set_hidden_state(self, state):
-        if len(state) != len(self.state):
-            raise Exception("Provided hidden state array does not match layer hidden states")
-        for s, h in zip(self.state, state):
-            if s.eval().shape != h.shape:
-                raise Exception("Hidden state shape not compatible")
-            s.set_value(floatX(h))
-
-    def reset_hidden_state(self):
-        for h in self.state:
-            h.set_value(h.get_value()*0)
-
     @property
     def output_shape(self):
         input_shape = self.input_shape
