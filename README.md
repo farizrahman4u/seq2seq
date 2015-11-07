@@ -35,7 +35,7 @@ hidden_dim = 500 #memory size of seq2seq
 
 embedding = Embedding(vocab_size, embedding_dim, input_length=maxlen)
 seq2seq = Seq2seq(input_length=maxlen, input_dim=embedding_dim,hidden_dim=hidden_dim,
-                  output_dim=embedding_dim, output_length=maxlen, batch_size=10)
+                  output_dim=embedding_dim, output_length=maxlen, batch_size=10, depth=5)
 
 model = Sequential()
 model.add(embedding)
