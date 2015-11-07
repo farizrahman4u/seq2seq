@@ -78,7 +78,6 @@ class LSTMEncoder(StatefulRNN):
         else:
             raise Exception("One of the following arguments must be provided for stateful RNNs: hidden_state, batch_size, weights")
         self.state = [self.h, self.c]
-        self.params += self.state
         if self.initial_weights is not None:
             self.set_weights(self.initial_weights[:nw])
             del self.initial_weights
@@ -112,10 +111,9 @@ class LSTMEncoder(StatefulRNN):
             outputs_info=[self.h, self.c],
             non_sequences=[self.U_i, self.U_f, self.U_o, self.U_c],
             truncate_gradient=self.truncate_gradient)
-        #self.updates = ((self.h, outputs[-1][0]),(self.c, outputs[-1][1]) )
+        self.updates = ((self.h, outputs[-1]),(self.c, memories[-1]))
         if self.decoder is not None:
-            decoder_updates = ((self.decoder.h, outputs[-1][0]),(self.decoder.c, outputs[-1][1]))
-            #decoder.updates = decoder_updates
+            self.decoder.updates=((self.decoder.h, outputs[-1]),(self.decoder.c, memories[-1]))
         return outputs[-1]
 
     def get_config(self):
