@@ -16,7 +16,7 @@ Sequence to Sequence Learning with Keras
 * The LSTM Decoder, when given a hidden state and a vector, generates a sequence.
 
 * In the `Seq2seq` model, the output vector of the LSTM Encoder is the input for the  LSTM Decoder, and
-* the hidden state of the LSTM Encoder is copied to the hidden state of LSTM Decoder.
+* The hidden state of the LSTM Encoder is copied to the hidden state of LSTM Decoder.
 
 
 **Example:**
