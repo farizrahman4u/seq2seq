@@ -42,6 +42,7 @@ def set_hidden_state(self, state):
 
 def get_weights(self):
 	return [l.get_weights() for l in self.layers]
+
 def set_weights(self, weights):
 	if len(self.layers) != len(weights):
 		raise Exception("Exactly " + str(len(self.layers)) + " weight arrays required " + 
