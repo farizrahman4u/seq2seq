@@ -9,6 +9,16 @@ Sequence to Sequence Learning with Keras
 
 ![seq2seq](http://i64.tinypic.com/30136te.png)
 
+
+**Notes:**
+
+* The LSTM Encoder encodes a sequence to a single a vector.
+* The LSTM Decoder, when given a hidden state and a vector, generates a sequence.
+
+* In the `Seq2seq` model, the output vector of the LSTM Encoder is the input for the  LSTM Decoder, and
+* the hidden state of the LSTM Encoder is copied to the hidden state of LSTM Decoder.
+
+
 **Example:**
 
 ```python
@@ -37,6 +47,7 @@ model.add(seq2seq)
 * [Numpy](http://www.numpy.org/)
 * [Theano](https://github.com/Theano/Theano) : Do not pip install
 * [Keras](keras.io)
+
 
 **TODO:**
 
