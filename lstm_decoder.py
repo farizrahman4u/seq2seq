@@ -15,7 +15,7 @@ class LSTMDecoder(StatefulRNN):
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1,
-                 hidden_state=None, batch_size=None, encoder=None, **kwargs):
+                 hidden_state=None, batch_size=None, **kwargs):
         self.output_dim = dim
         self.input_dim = dim
         self.hidden_dim = hidden_dim
@@ -33,7 +33,7 @@ class LSTMDecoder(StatefulRNN):
         self.input_ndim = 2
         self.return_sequences = True
         self.updates = ()
-        self.encoder = encoder
+        self.encoder = None
         super(LSTMDecoder, self).__init__(**kwargs)
 
     def build(self):
