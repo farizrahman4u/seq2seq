@@ -15,7 +15,7 @@ class LSTMDecoder(StatefulRNN):
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1,
-                 hidden_state=None, batch_size=None, **kwargs):
+                 hidden_state=None, batch_size=None, encoder=None, **kwargs):
         self.output_dim = dim
         self.input_dim = dim
         self.hidden_dim = hidden_dim
@@ -32,6 +32,8 @@ class LSTMDecoder(StatefulRNN):
         kwargs['input_shape'] = (dim,)
         self.input_ndim = 2
         self.return_sequences = True
+        self.updates = ()
+        self.encoder = encoder
         super(LSTMDecoder, self).__init__(**kwargs)
 
     def build(self):
@@ -85,7 +87,6 @@ class LSTMDecoder(StatefulRNN):
         else:
             raise Exception("One of the following arguments must be provided for stateful RNNs: hidden_state, batch_size, weights")
         self.state = [self.h, self.c]
-        self.params += self.state
         if self.initial_weights is not None:
             self.set_weights(self.initial_weights[:nw])
             del self.initial_weights
@@ -93,13 +94,13 @@ class LSTMDecoder(StatefulRNN):
     def _step(self,
               x_tm1,
               h_tm1, c_tm1,
-              u_i, u_f, u_o, u_c):
+              u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, b_i, b_f, b_c, b_o, b_x):
 
 
-        xi_t = T.dot(x_tm1, self.W_i) + self.b_i
-        xf_t = T.dot(x_tm1, self.W_f) + self.b_f
-        xc_t = T.dot(x_tm1, self.W_c) + self.b_c
-        xo_t = T.dot(x_tm1, self.W_o) + self.b_o
+        xi_t = T.dot(x_tm1, w_i) + b_i
+        xf_t = T.dot(x_tm1, w_f) + b_f
+        xc_t = T.dot(x_tm1, w_c) + b_c
+        xo_t = T.dot(x_tm1, w_o) + b_o
 
         i_t = self.inner_activation(xi_t + T.dot(h_tm1, u_i))
         f_t = self.inner_activation(xf_t + T.dot(h_tm1, u_f))
@@ -107,7 +108,7 @@ class LSTMDecoder(StatefulRNN):
         o_t = self.inner_activation(xo_t + T.dot(h_tm1, u_o))
         h_t = o_t * self.activation(c_t)
 
-        x_t = T.dot(h_t, self.W_x) + self.b_x
+        x_t = T.dot(h_t, w_x) + b_x
         return x_t, h_t, c_t
 
     def get_output(self, train=False):
@@ -115,10 +116,14 @@ class LSTMDecoder(StatefulRNN):
         [outputs,hidden_states, cell_states], updates = theano.scan(
             self._step,
             n_steps = self.output_length,
-            outputs_info=[x_t, self.h, self.h],
-            non_sequences=[self.U_i, self.U_f, self.U_o, self.U_c],
+            outputs_info=[x_t, self.h, self.c],
+            non_sequences=[self.U_i, self.U_f, self.U_o, self.U_c,
+                          self.W_i, self.W_f, self.W_c, self.W_o,
+                          self.W_x, self.b_i, self.b_f, self.b_c, 
+                          self.b_o, self.b_x],
             truncate_gradient=self.truncate_gradient)
-        self.updates = ((self.h, outputs[-1][0]),(self.c, outputs[-1][1]) )
+        if self.encoder is None:
+            self.updates = ((self.h, hidden_states[-1]),(self.c, cell_states[-1]))
         return outputs
 
     def get_config(self):
