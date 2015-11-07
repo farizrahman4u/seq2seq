@@ -4,12 +4,13 @@ import theano
 import theano.tensor as T
 import numpy as np
 
-from .. import activations, initializations
-from ..utils.theano_utils import shared_scalar, shared_zeros, alloc_zeros_matrix
-from ..layers.core import Layer, MaskedLayer
+from keras import activations, initializations
+from keras.utils.theano_utils import shared_zeros, sharedX 
+from keras.layers.core import Layer, MaskedLayer
 from six.moves import range
+from stateful_rnn import StatefulRNN
 
-class LSTMDecoder(Recurrent):
+class LSTMDecoder(StatefulRNN):
 	   def __init__(self, dim, hidden_dim = None, output_length,
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
@@ -71,7 +72,7 @@ class LSTMDecoder(Recurrent):
 
         if self.initial_state is not None:
             self.h = sharedX(self.initial_state[0])
-            self.c = shared(self.initial_state[1])
+            self.c = sharedX(self.initial_state[1])
             del self.initial_state
         elif self.batch_size is not None:
             self.h = shared_zeros((self.batch_size, self.hidden_dim))
