@@ -15,7 +15,7 @@ class LSTMEncoder(StatefulRNN):
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1,
-                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, decoder=None, **kwargs):
+                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, return_sequences = False,decoder=None, **kwargs):
         self.output_dim = output_dim
         self.init = initializations.get(init)
         self.inner_init = initializations.get(inner_init)
@@ -31,7 +31,7 @@ class LSTMEncoder(StatefulRNN):
         self.decoder = decoder
         if decoder is not None:
             decoder.encoder = self
-        self.return_sequences = False
+        self.return_sequences = return_sequences
         if self.input_dim:
             kwargs['input_shape'] = (self.input_length, self.input_dim)
         super(LSTMEncoder, self).__init__(**kwargs)
@@ -116,6 +116,8 @@ class LSTMEncoder(StatefulRNN):
         self.updates = ((self.h, outputs[-1]),(self.c, memories[-1]))
         if self.decoder is not None:
             self.decoder.updates=((self.decoder.h, outputs[-1]),(self.decoder.c, memories[-1]))
+        if self.return_sequences:
+            return outputs.dimshuffle((1, 0, 2))
         return outputs[-1]
 
     def get_config(self):
@@ -128,6 +130,7 @@ class LSTMEncoder(StatefulRNN):
                   "inner_activation": self.inner_activation.__name__,
                   "truncate_gradient": self.truncate_gradient,
                   "input_dim": self.input_dim,
-                  "input_length": self.input_length}
+                  "input_length": self.input_length,
+                  "return_sequences": self.return_sequences}
         base_config = super(LSTM, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
