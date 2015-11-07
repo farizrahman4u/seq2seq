@@ -22,7 +22,6 @@ class Seq2seq(Sequential):
 							  inner_activation=inner_activation,weights=weights[2],
 							  truncate_gradient = truncate_gradient, input_length=input_length,
 							  hidden_state=hidden_state[1], batch_size=batch_size, decoder=decoder)
-
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
 
 		if weights[1] is not None:
@@ -31,9 +30,21 @@ class Seq2seq(Sequential):
 		self.add(dense)
 		self.add(decoder)
 
+		self.encoder = encoder
+		self.dense = dense
+		self.decoder = decoder
 def get_hidden_state(self):
-	return [encoder.get_hidden_state(), decoder.get_hidden_state()]
+	return [self.encoder.get_hidden_state(), self.decoder.get_hidden_state()]
 
 def set_hidden_state(self, state):
-	encoder.set_hidden_state(state[0])
-	decoder.set_hidden_state(state[1])
+	self.encoder.set_hidden_state(state[0])
+	self.decoder.set_hidden_state(state[1])
+
+def get_weights(self):
+	return [l.get_weights() for l in self.layers]
+def set_weights(self, weights):
+	if len(self.layers) != len(weights):
+		raise Exception("Exactly " + str(len(self.layers)) + " weight arrays required " + 
+			str(len(weights)) + " given")
+	for l,w in zip(l,weights):
+		l.set_weights(w)
