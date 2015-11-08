@@ -21,7 +21,7 @@ Sequence to Sequence Learning with Keras
 
 **Continious VS Descrete sequence pairs:**
 
-* When training on continuous sequence pairs, such as long conversations, set the `remember_state` argument to `True`for `Seq2seq` model. This is important if you want context sensitive conversational models, so that you can avoid scenarios like this:
+* When training on continuous sequence pairs, such as long conversations, set the `remember_state` argument to `True`for `Seq2seq` model. This is important if you want context sensitive conversational models, so that you can avoid scenarios like this:(Will only work if there are lot of exchanges in each conversation in your training data)
 
 > **Human**: what is your job ?
 
@@ -31,7 +31,11 @@ Sequence to Sequence Learning with Keras
 
 > **Machine**: i ’m a doctor
 
-* In case of descrete sequence pairs(one on one sequences, for e.g, machine translation) let the `remeber_state` argument be `False`.
+Source : [A Neural Conversational Model](http://arxiv.org/pdf/1506.05869v1.pdf)
+
+* Do not forget to clear the hidden state of `Seq2seq` layer after every conversation(**Not after every exchange**) or a fixed number of batches using `reset_hidden_state()` during training and testing.
+
+* In case of descrete sequence pairs(for e.g, machine translation) let the `remeber_state` argument be `False`.
 
 
 **Example:**
