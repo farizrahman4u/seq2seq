@@ -19,6 +19,20 @@ Sequence to Sequence Learning with Keras
 * In the `Seq2seq` model, the output vector of the LSTM Encoder is the input for the  LSTM Decoder, and
 * The hidden state of the LSTM Encoder is copied to the hidden state of LSTM Decoder.
 
+**Continious VS Descrete sequence pairs:**
+
+* When training on continuous sequence pairs, such as long conversations, set the `remember_state` argument to `True`for `Seq2seq` model. This is important if you want context sensitive conversational models, so that you can avoid scenarios like this:
+
+> **Human**: what is your job ?
+
+> **Machine**: i ’m a lawyer .
+
+> **Human**: what do you do ?
+
+> **Machine**: i ’m a doctor
+
+* In case of descrete sequence pairs(one on one sequences, for e.g, machine translation) let the `remeber_state` argument be `False`.
+
 
 **Example:**
 
