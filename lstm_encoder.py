@@ -120,7 +120,9 @@ class LSTMEncoder(StatefulRNN):
         self.updates = ((self.h, outputs[-1]),(self.c, memories[-1]))
         if self.decoders is not None:
             for d in self.decoders:
-                d.updates=((d.h, outputs[-1]),d.c, memories[-1]))
+                d.updates = ((d.h, outputs[-1]),d.c, memories[-1]))
+        elif self.decoder is not None:
+            self.decoder.updates = ((self.decoder.h, outputs[-1]), self.decoder.c, memories[-1]))
         if self.return_sequences:
             return outputs.dimshuffle((1, 0, 2))
         return outputs[-1]
