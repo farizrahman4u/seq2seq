@@ -37,7 +37,7 @@ Source : [A Neural Conversational Model](http://arxiv.org/pdf/1506.05869v1.pdf)
 
 * You will also have to clear the hidden state of `Seq2seq` layer after a fixed number of batches when used with `remember_state=True`.
 
-* In case of descrete sequence pairs(for e.g, machine translation) let the `remeber_state` argument be `False`.
+* In case of descrete sequence pairs(for e.g, machine translation) use `Seq2seq` layer with the `remeber_state` argument set to `False`.
 
 
 **Example:**
