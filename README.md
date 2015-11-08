@@ -5,6 +5,7 @@ Sequence to Sequence Learning with Keras
 
 * [Sequence to Sequence Learning with Neural Networks](http://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf)
 * [A Neural Conversational Model](http://arxiv.org/pdf/1506.05869v1.pdf)
+* [Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation](http://arxiv.org/pdf/1406.1078.pdf)
 
 
 ![seq2seq](http://i64.tinypic.com/30136te.png)
