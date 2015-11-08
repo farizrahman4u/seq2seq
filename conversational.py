@@ -9,13 +9,14 @@ from lstm_decoder import LSTMDecoder2
 class Conversational(Seq2seq):
 	def __init__(self, output_dim, hidden_dim,output_length, init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one', activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1,
-                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, depth=1, context_sensitive=False,
+                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, depth=2, context_sensitive=False,
                  ):
 
 		if not type(depth) == list:
 			depth = [depth, depth]
 		n_lstms = sum(depth)
-
+		if  depth[1] < 2:
+			print "Warning: Your model will not be able to remember its previous output!"
 		if weights is None:
 			weights = [None] * (n_lstms + 1)
 
@@ -56,9 +57,7 @@ class Conversational(Seq2seq):
 					for i in range(depth[1]-1)]
 
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
-
-		if not context_sensitive:
-			encoder.decoder = decoder
+		encoder.decoder = decoder
 		if weights[1] is not None:
 			dense.set_weights(weights[1])
 		super(Seq2seq, self).__init__()
