@@ -21,7 +21,7 @@ Sequence to Sequence Learning with Keras
 
 **Continious VS Descrete sequence pairs:**
 
-* When training on continuous sequence pairs, such as long conversations, use the `Conversational` model instead of `Seq2seq` model. This is important if you want context sensitive conversational models, so that you can avoid scenarios like this:(Will only work if there are lot of exchanges in each conversation in your training data)
+* When training on continuous sequence pairs, such as long conversations, use the `Conversational` model instead of `Seq2seq` model, with argument `context_sensitive=True`. This is important if you want context sensitive conversational models, so that you can avoid scenarios like this:(Will only work if there are lot of exchanges in each conversation in your training data)
 
 > **Human**: what is your job ?
 
@@ -33,7 +33,7 @@ Sequence to Sequence Learning with Keras
 
 Source : [A Neural Conversational Model](http://arxiv.org/pdf/1506.05869v1.pdf)
 
-* Do not forget to clear the hidden state of `Conversational` layer after every conversation(**Not after every exchange**) or a fixed number of batches using `reset_hidden_state()` during training and testing.
+* When `context_sensitive=True` do not forget to clear the hidden state of `Conversational` layer after every conversation(**Not after every exchange**) or a fixed number of batches using `reset_hidden_state()` during training and testing.
 
 * You will also have to clear the hidden state of `Seq2seq` layer after a fixed number of batches when used with `remember_state=True`.
 
