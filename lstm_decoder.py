@@ -15,7 +15,7 @@ class LSTMDecoder(StatefulRNN):
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1,
-                 hidden_state=None, batch_size=None, **kwargs):
+                 hidden_state=None, batch_size=None, remember_state=False, **kwargs):
         self.output_dim = dim
         self.input_dim = dim
         self.hidden_dim = hidden_dim
@@ -32,6 +32,7 @@ class LSTMDecoder(StatefulRNN):
         kwargs['input_shape'] = (dim,)
         self.input_ndim = 2
         self.return_sequences = True
+        self.remember_state = remember_state
         self.updates = ()
         self.encoder = None
         super(LSTMDecoder, self).__init__(**kwargs)
@@ -122,7 +123,7 @@ class LSTMDecoder(StatefulRNN):
                           self.W_x, self.b_i, self.b_f, self.b_c, 
                           self.b_o, self.b_x],
             truncate_gradient=self.truncate_gradient)
-        if self.encoder is None:
+        if self.encoder is None and self.remember_state:
             self.updates = ((self.h, hidden_states[-1]),(self.c, cell_states[-1]))
         return outputs
 
@@ -136,7 +137,8 @@ class LSTMDecoder(StatefulRNN):
                   "inner_activation": self.inner_activation.__name__,
                   "truncate_gradient": self.truncate_gradient,
                   "input_dim": self.input_dim,
-                  "output_length": self.output_length
+                  "output_length": self.output_length,
+                  "remember_state": self.remember_state
                   }
         base_config = super(FeedbackLSTM, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -152,3 +154,40 @@ class LSTMDecoder(StatefulRNN):
     def output_shape(self):
         input_shape = self.input_shape
         return (input_shape[0], self.output_length, self.output_dim)
+
+class LSTMDecoder2(LSTMDecoder):
+
+    def _step(self,
+              x_tm1,
+              h_tm1, c_tm1, v,
+              u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, b_i, b_f, b_c, b_o, b_x):
+
+        #Inputs = output from previous time step, vector from encoder
+        xi_t = T.dot(x_tm1, w_i) + T.dot(v, w_i) + b_i
+        xf_t = T.dot(x_tm1, w_f) + T.dot(v, w_f) + b_f
+        xc_t = T.dot(x_tm1, w_c) + T.dot(v, w_c) + b_c
+        xo_t = T.dot(x_tm1, w_o) + T.dot(v, w_o) + b_o
+
+        i_t = self.inner_activation(xi_t + T.dot(h_tm1, u_i))
+        f_t = self.inner_activation(xf_t + T.dot(h_tm1, u_f))
+        c_t = f_t * c_tm1 + i_t * self.activation(xc_t + T.dot(h_tm1, u_c))
+        o_t = self.inner_activation(xo_t + T.dot(h_tm1, u_o))
+        h_t = o_t * self.activation(c_t)
+
+        x_t = T.dot(h_t, w_x) + b_x
+        return x_t, h_t, c_t
+
+    def get_output(self, train=False):
+        v = self.get_input(train) #Output vector v from encoder        
+        [outputs,hidden_states, cell_states], updates = theano.scan(
+            self._step,
+            n_steps = self.output_length,
+            outputs_info=[v, self.h, self.c],
+            non_sequences=[v, self.U_i, self.U_f, self.U_o, self.U_c,
+                          self.W_i, self.W_f, self.W_c, self.W_o,
+                          self.W_x, self.b_i, self.b_f, self.b_c, 
+                          self.b_o, self.b_x],
+            truncate_gradient=self.truncate_gradient)
+        if self.encoder is None and self.remember_state:
+            self.updates = ((self.h, hidden_states[-1]),(self.c, cell_states[-1]))
+        return outputs
