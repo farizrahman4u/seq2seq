@@ -15,7 +15,7 @@ class LSTMEncoder(StatefulRNN):
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1,
-                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, return_sequences = False,decoder=None, **kwargs):
+                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, return_sequences = False, decoder=None, decoders=None, **kwargs):
         self.output_dim = output_dim
         self.init = initializations.get(init)
         self.inner_init = initializations.get(inner_init)
@@ -28,9 +28,13 @@ class LSTMEncoder(StatefulRNN):
         self.batch_size = batch_size
         self.input_dim = input_dim
         self.input_length = input_length
-        self.decoder = decoder
         if decoder is not None:
-            decoder.encoder = self
+            decoders = [decoder]
+            self.decoder = decoder
+        self.decoders = decoders
+        if decoders is not None:
+            for d in decoders:
+                d.encoder = self
         self.return_sequences = return_sequences
         if self.input_dim:
             kwargs['input_shape'] = (self.input_length, self.input_dim)
@@ -114,8 +118,9 @@ class LSTMEncoder(StatefulRNN):
             non_sequences=[self.U_i, self.U_f, self.U_o, self.U_c],
             truncate_gradient=self.truncate_gradient)
         self.updates = ((self.h, outputs[-1]),(self.c, memories[-1]))
-        if self.decoder is not None:
-            self.decoder.updates=((self.decoder.h, outputs[-1]),(self.decoder.c, memories[-1]))
+        if self.decoders is not None:
+            for d in self.decoders:
+                d.updates=((d.h, outputs[-1]),d.c, memories[-1]))
         if self.return_sequences:
             return outputs.dimshuffle((1, 0, 2))
         return outputs[-1]
