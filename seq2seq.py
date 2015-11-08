@@ -3,7 +3,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 
 from lstm_encoder import LSTMEncoder
-from lstm_decoder import LSTMDecoder
+from lstm_decoder import LSTMDecoder, LSTMDecoder2
 
 class Seq2seq(Sequential):
 	def __init__(self, output_dim, hidden_dim,output_length, init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one', activation='tanh', inner_activation='hard_sigmoid',
@@ -54,10 +54,13 @@ class Seq2seq(Sequential):
 							  hidden_state=hidden_state[decoder_state_index + 1 + i], batch_size=batch_size, return_sequences=True, remember_state=remember_state)
 					for i in range(depth[1]-1)]
 
+		nl = len(left_deep)
+		nr = len(right_deep)
+
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
 
-		if weights[1] is not None:
-			dense.set_weights(weights[1])
+		if weights[depth[0]] is not None:
+			dense.set_weights(weights[depth[0]])
 		super(Seq2seq, self).__init__()
 		for l in left_deep:
 			self.add(l)
@@ -69,6 +72,8 @@ class Seq2seq(Sequential):
 		self.encoder = encoder
 		self.dense = dense
 		self.decoder = decoder
+		self.left_deep = left_deep
+		self.right_deep = right_deep
 
 	def get_hidden_state(self):
 		state = []
