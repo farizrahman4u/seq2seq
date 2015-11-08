@@ -3,6 +3,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 
 from seq2seq import Seq2seq
+from lstm_encoder import LSTMEncoder
 from lstm_decoder import LSTMDecoder2
 
 
