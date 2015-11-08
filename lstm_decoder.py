@@ -62,7 +62,9 @@ class LSTMDecoder(StatefulRNN):
 
         self.W_x = self.init((hdim, dim))
         self.b_x = shared_zeros((dim))
-        self.params = [
+        if not hasattr(self, 'params'):
+            self.params = [] #so that base classes could add params
+        self.params += [
             self.W_i, self.U_i, self.b_i,
             self.W_c, self.U_c, self.b_c,
             self.W_f, self.U_f, self.b_f,
@@ -157,16 +159,28 @@ class LSTMDecoder(StatefulRNN):
 
 class LSTMDecoder2(LSTMDecoder):
 
+    def build(self):
+        dim = self.input_dim
+        hdim = self.hidden_dim
+        self.V_i = self.init((dim, hdim))
+        self.V_f = self.init((dim, hdim))
+        self.V_c = self.init((dim, hdim))
+        self.V_o = self.init((dim, hdim))
+        if not hasattr(self, 'params'):
+            self.params = []
+        self.params += [self.V_i,self.V_c, self.V_f, self.V_o]
+        super(LSTMDecoder2, self).build()
+
     def _step(self,
               x_tm1,
               h_tm1, c_tm1, v,
-              u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, b_i, b_f, b_c, b_o, b_x):
+              u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, v_i, v_f, v_c, v_o, b_i, b_f, b_c, b_o, b_x):
 
         #Inputs = output from previous time step, vector from encoder
-        xi_t = T.dot(x_tm1, w_i) + T.dot(v, w_i) + b_i
-        xf_t = T.dot(x_tm1, w_f) + T.dot(v, w_f) + b_f
-        xc_t = T.dot(x_tm1, w_c) + T.dot(v, w_c) + b_c
-        xo_t = T.dot(x_tm1, w_o) + T.dot(v, w_o) + b_o
+        xi_t = T.dot(x_tm1, w_i) + T.dot(v, v_i) + b_i
+        xf_t = T.dot(x_tm1, w_f) + T.dot(v, v_f) + b_f
+        xc_t = T.dot(x_tm1, w_c) + T.dot(v, v_c) + b_c
+        xo_t = T.dot(x_tm1, w_o) + T.dot(v, v_o) + b_o
 
         i_t = self.inner_activation(xi_t + T.dot(h_tm1, u_i))
         f_t = self.inner_activation(xf_t + T.dot(h_tm1, u_f))
@@ -185,7 +199,8 @@ class LSTMDecoder2(LSTMDecoder):
             outputs_info=[v, self.h, self.c],
             non_sequences=[v, self.U_i, self.U_f, self.U_o, self.U_c,
                           self.W_i, self.W_f, self.W_c, self.W_o,
-                          self.W_x, self.b_i, self.b_f, self.b_c, 
+                          self.W_x, self.V_i, self.V_f, self.V_c,
+                          self.V_o, self.b_i, self.b_f, self.b_c, 
                           self.b_o, self.b_x],
             truncate_gradient=self.truncate_gradient)
         if self.encoder is None and self.remember_state:
