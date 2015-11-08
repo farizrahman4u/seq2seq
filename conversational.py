@@ -15,7 +15,7 @@ class Conversational(Seq2seq):
 		if not type(depth) == list:
 			depth = [depth, depth]
 		n_lstms = sum(depth)
-		if  depth[1] < 2:
+		if  depth[1] < 2 and context_sensitive = True:
 			print "Warning: Your model will not be able to remember its previous output!"
 		if weights is None:
 			weights = [None] * (n_lstms + 1)
@@ -58,8 +58,8 @@ class Conversational(Seq2seq):
 
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
 		encoder.decoder = decoder
-		if weights[1] is not None:
-			dense.set_weights(weights[1])
+		if weights[depth[0]] is not None:
+			dense.set_weights(weights[depth[0]])
 		super(Seq2seq, self).__init__()
 		for l in left_deep:
 			self.add(l)
