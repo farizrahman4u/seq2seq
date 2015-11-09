@@ -164,7 +164,7 @@ class LSTMDecoder(StatefulRNN):
 
 class LSTMDecoder2(LSTMDecoder):
     def set_params(self):
-        super(LSTMDecoder2, 'self').set_params()
+        super(LSTMDecoder2, self).set_params()
         dim = self.input_dim
         hdim = self.hidden_dim
         self.V_i = self.init((dim, hdim))
