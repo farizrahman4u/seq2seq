@@ -21,25 +21,22 @@ class Conversational(Seq2seq):
 			weights = [None] * (n_lstms + 1)
 
 		if hidden_state is None:
-			hidden_state = [None] * n_lstms
+			hidden_state = [None] * (n_lstms + 1)
 
-		encoder_weight_index = depth[0] - 1
-		decoder_weight_index = depth[0] + 1
+		encoder_index = depth[0] - 1
+		decoder_index = depth[0] + 1
 
-		encoder_state_index = depth[0] - 1
-		decoder_state_index = depth[0]
-
-		decoder = LSTMDecoder(dim=output_dim, hidden_dim=hidden_dim, output_length=output_length,
+		decoder = LSTMDecoder2(dim=output_dim, hidden_dim=hidden_dim, output_length=output_length,
 							  init=init,inner_init=inner_init, activation=activation, 
-							  inner_activation=inner_activation,weights=weights[decoder_weight_index],
+							  inner_activation=inner_activation,weights=weights[decoder_index],
 							  truncate_gradient = truncate_gradient, 
-							  hidden_state=hidden_state[decoder_state_index], batch_size=batch_size, remember_state=False)#context_sensitive)
+							  hidden_state=hidden_state[decoder_index], batch_size=batch_size, remember_state=context_sensitive)
 
 		encoder = LSTMEncoder(input_dim=input_dim, output_dim=hidden_dim,init=init,
 							  inner_init=inner_init, activation=activation, 
-							  inner_activation=inner_activation,weights=weights[encoder_weight_index],
+							  inner_activation=inner_activation,weights=weights[encoder_index],
 							  truncate_gradient = truncate_gradient, input_length=input_length,
-							  hidden_state=hidden_state[encoder_state_index], batch_size=batch_size, remember_state=context_sensitive)
+							  hidden_state=hidden_state[encoder_index], batch_size=batch_size, remember_state=context_sensitive)
 
 		left_deep = [LSTMEncoder(input_dim=input_dim, output_dim=input_dim,init=init,
 							  inner_init=inner_init, activation=activation, 
@@ -51,9 +48,9 @@ class Conversational(Seq2seq):
 
 		right_deep = [LSTMEncoder(input_dim=output_dim, output_dim=output_dim,init=init,
 							  inner_init=inner_init, activation=activation, 
-							  inner_activation=inner_activation,weights=weights[decoder_weight_index + 1 + i],
+							  inner_activation=inner_activation,weights=weights[decoder_index + 1 + i],
 							  truncate_gradient = truncate_gradient, input_length=input_length,
-							  hidden_state=hidden_state[decoder_state_index + 1 + i], batch_size=batch_size, return_sequences=True, remember_state=context_sensitive)
+							  hidden_state=hidden_state[decoder_index + 1 + i], batch_size=batch_size, return_sequences=True, remember_state=context_sensitive)
 					for i in range(depth[1]-1)]
 
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
