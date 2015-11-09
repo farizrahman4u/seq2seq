@@ -29,19 +29,19 @@ class Seq2seq(StatefulContainer):
 							  init=init,inner_init=inner_init, activation=activation, 
 							  inner_activation=inner_activation,weights=weights[decoder_index],
 							  truncate_gradient = truncate_gradient, 
-							  hidden_state=hidden_state[decoder_index], batch_size=batch_size, remember_state=False)
+							  hidden_state=hidden_state[decoder_index], batch_size=batch_size, remember_state=remember_state)
 
 		encoder = LSTMEncoder(input_dim=input_dim, output_dim=hidden_dim,init=init,
 							  inner_init=inner_init, activation=activation, 
 							  inner_activation=inner_activation,weights=weights[encoder_index],
 							  truncate_gradient = truncate_gradient, input_length=input_length,
-							  hidden_state=hidden_state[encoder_index], batch_size=batch_size, remember_state=context_sensitive)
+							  hidden_state=hidden_state[encoder_index], batch_size=batch_size, remember_state=remember_state)
 
 		left_deep = [LSTMEncoder(input_dim=input_dim, output_dim=input_dim,init=init,
 							  inner_init=inner_init, activation=activation, 
 							  inner_activation=inner_activation,weights=weights[i],
 							  truncate_gradient = truncate_gradient, input_length=input_length,
-							  hidden_state=hidden_state[i], batch_size=batch_size, return_sequences=True, remember_state=context_sensitive)
+							  hidden_state=hidden_state[i], batch_size=batch_size, return_sequences=True, remember_state=remember_state)
 					for i in range(depth[0]-1)]
 
 
@@ -49,7 +49,7 @@ class Seq2seq(StatefulContainer):
 							  inner_init=inner_init, activation=activation, 
 							  inner_activation=inner_activation,weights=weights[decoder_index + 1 + i],
 							  truncate_gradient = truncate_gradient, input_length=input_length,
-							  hidden_state=hidden_state[decoder_index + 1 + i], batch_size=batch_size, return_sequences=True, remember_state=context_sensitive)
+							  hidden_state=hidden_state[decoder_index + 1 + i], batch_size=batch_size, return_sequences=True, remember_state=remember_state)
 					for i in range(depth[1]-1)]
 
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
