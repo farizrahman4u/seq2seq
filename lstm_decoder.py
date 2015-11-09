@@ -34,10 +34,8 @@ class LSTMDecoder(StatefulRNN):
         self.return_sequences = True
         self.remember_state = remember_state
         self.updates = ()
-        self.encoder = None
         super(LSTMDecoder, self).__init__(**kwargs)
-
-    def build(self):
+    def set_params(self):
 
         dim = self.input_dim
         hdim = self.hidden_dim
@@ -62,15 +60,15 @@ class LSTMDecoder(StatefulRNN):
 
         self.W_x = self.init((hdim, dim))
         self.b_x = shared_zeros((dim))
-        if not hasattr(self, 'params'):
-            self.params = [] #so that base classes could add params
-        self.params += [
+
+        self.params = [
             self.W_i, self.U_i, self.b_i,
             self.W_c, self.U_c, self.b_c,
             self.W_f, self.U_f, self.b_f,
             self.W_o, self.U_o, self.b_o,
             self.W_x, self.b_x
         ]
+    def _build(self):
         nw = len(self.initial_weights) if self.initial_weights is not None else 0
 
         if self.initial_state is not None:
@@ -93,6 +91,11 @@ class LSTMDecoder(StatefulRNN):
         if self.initial_weights is not None:
             self.set_weights(self.initial_weights[:nw])
             del self.initial_weights
+    def build(self):
+
+        self.set_params()
+        self._build()
+ 
 
     def _step(self,
               x_tm1,
@@ -125,8 +128,10 @@ class LSTMDecoder(StatefulRNN):
                           self.W_x, self.b_i, self.b_f, self.b_c, 
                           self.b_o, self.b_x],
             truncate_gradient=self.truncate_gradient)
-        if self.encoder is None and self.remember_state:
+        if self.state_input is None and self.remember_state:
             self.updates = ((self.h, hidden_states[-1]),(self.c, cell_states[-1]))
+        for o in self.state_outputs:
+            o.updates=((o.h, hidden_states[-1]),(o.c, cell_states[-1]))
         return outputs
 
     def get_config(self):
@@ -158,18 +163,19 @@ class LSTMDecoder(StatefulRNN):
         return (input_shape[0], self.output_length, self.output_dim)
 
 class LSTMDecoder2(LSTMDecoder):
-
-    def build(self):
+    def set_params(self):
+        super(LSTMDecoder2, 'self').set_params()
         dim = self.input_dim
         hdim = self.hidden_dim
         self.V_i = self.init((dim, hdim))
         self.V_f = self.init((dim, hdim))
         self.V_c = self.init((dim, hdim))
         self.V_o = self.init((dim, hdim))
-        if not hasattr(self, 'params'):
-            self.params = []
         self.params += [self.V_i,self.V_c, self.V_f, self.V_o]
-        super(LSTMDecoder2, self).build()
+
+    def build(self):
+        self.set_params()
+        self._build()
 
     def _step(self,
               x_tm1,
@@ -203,6 +209,8 @@ class LSTMDecoder2(LSTMDecoder):
                           self.V_o, self.b_i, self.b_f, self.b_c, 
                           self.b_o, self.b_x],
             truncate_gradient=self.truncate_gradient)
-        if self.encoder is None and self.remember_state:
+        if self.state_input is None and self.remember_state:
             self.updates = ((self.h, hidden_states[-1]),(self.c, cell_states[-1]))
+        for o in self.state_outputs:
+            o.updates=((o.h, hidden_states[-1]),(o.c, cell_states[-1]))           
         return outputs

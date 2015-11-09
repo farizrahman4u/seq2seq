@@ -4,8 +4,7 @@ from keras.layers.core import Dense
 
 from seq2seq import Seq2seq
 from lstm_encoder import LSTMEncoder
-from lstm_decoder import LSTMDecoder2
-
+from lstm_decoder import LSTMDecoder, LSTMDecoder2
 
 class Conversational(Seq2seq):
 	def __init__(self, output_dim, hidden_dim,output_length, init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one', activation='tanh', inner_activation='hard_sigmoid',
@@ -30,11 +29,11 @@ class Conversational(Seq2seq):
 		encoder_state_index = depth[0] - 1
 		decoder_state_index = depth[0]
 
-		decoder = LSTMDecoder2(dim=output_dim, hidden_dim=hidden_dim, output_length=output_length,
+		decoder = LSTMDecoder(dim=output_dim, hidden_dim=hidden_dim, output_length=output_length,
 							  init=init,inner_init=inner_init, activation=activation, 
 							  inner_activation=inner_activation,weights=weights[decoder_weight_index],
 							  truncate_gradient = truncate_gradient, 
-							  hidden_state=hidden_state[decoder_state_index], batch_size=batch_size, remember_state=context_sensitive)
+							  hidden_state=hidden_state[decoder_state_index], batch_size=batch_size, remember_state=False)#context_sensitive)
 
 		encoder = LSTMEncoder(input_dim=input_dim, output_dim=hidden_dim,init=init,
 							  inner_init=inner_init, activation=activation, 
@@ -58,7 +57,7 @@ class Conversational(Seq2seq):
 					for i in range(depth[1]-1)]
 
 		dense = Dense(input_dim=hidden_dim, output_dim=output_dim)
-		encoder.decoder = decoder
+		encoder.broadcast_state(decoder)
 		if weights[depth[0]] is not None:
 			dense.set_weights(weights[depth[0]])
 		super(Seq2seq, self).__init__()
