@@ -1,7 +1,7 @@
 # Deep LSTM with hidden state forwarding
-
-from keras import Sequential
-import LSTMEncoder as lstm from lstm_encoder
+import keras
+from keras.models import Sequential
+from lstm_encoder import LSTMEncoder as lstm
 from keras.layers.core import RepeatVector
 from stateful_container import StatefulContainer
 
@@ -14,7 +14,7 @@ class DeepLSTM(StatefulContainer):
     		raise Exception("Minimum depth is 1")
     	if depth == 1:
     		nlayer = depth
-    	elif inner_return_sequences = False:
+    	elif not inner_return_sequences:
     		nlayer = depth*2 - 1
 
     	if weights is None:
@@ -34,11 +34,26 @@ class DeepLSTM(StatefulContainer):
     	if depth == 1:
     		self.add(get_lstm(input_dim, output_dim, return_sequences, 0))
     	else:
-    		self.add(get_lstm(input_dim, hidden_dim, inner_return_sequences, 0))
+    		lstms = []
+
+    		layer = get_lstm(input_dim, hidden_dim, inner_return_sequences, 0)
+    		lstms.append(layer)
+    		self.add(layer)
     		if not inner_return_sequences:
     			self.add(RepeatVector(input_length))
+
     		for i in range(depth-2):
-    			self.add(get_lstm(hidden_dim, hidden_dim, inner_return_sequences, i+1))
-    		if not inner_return_sequences:
-    			self.add(RepeatVector(input_length))
-    		self.add(get_lstm(hidden_dim, output_dim, return_sequences))
+    			layer = get_lstm(hidden_dim, hidden_dim, inner_return_sequences, i+1)
+       			lstms.append(layer)
+    			self.add(layer)
+    			if not inner_return_sequences:
+    				self.add(RepeatVector(input_length))
+
+    		layer = get_lstm(hidden_dim, output_dim, return_sequences)
+    		lstms.append(layer)
+    		self.add(layer)
+
+    		for i in range(len(lstms)-1):#connect hidden layers.
+    			lstms[i].broadcast_state(lstms[i+1])
+
+
