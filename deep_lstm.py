@@ -50,9 +50,9 @@ class DeepLSTM(StatefulContainer):
     			if not inner_return_sequences:
     				self.add(RepeatVector(input_length))
 
-                layer = get_lstm(output_dim, output_dim, inner_return_sequences)
-                lstms.append(layer)
-                self.add(layer)               
+            layer = get_lstm(output_dim, output_dim, inner_return_sequences)
+            lstms.append(layer)
+            self.add(layer)               
 
     		for i in range(len(lstms)-1):#connect hidden layers.
     			lstms[i].broadcast_state(lstms[i+1])
