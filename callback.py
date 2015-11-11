@@ -1,7 +1,7 @@
 import keras
 from keras.callbacks import Callback
 
-class ResetRNNState(Callback):
+class ResetState(Callback):
     """
     This is supposed to be used with stateful RNNs
     Use it for clearing the hidden state after a given number of batches
