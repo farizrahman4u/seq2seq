@@ -10,6 +10,7 @@ class DeepLSTM(StatefulContainer):
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1, input_length=None, hidden_state=None, batch_size=None, return_sequences = False, inner_return_sequences = False, remember_state=False, **kwargs):
+        self.state = []
     	if depth < 1:
     		raise Exception("Minimum depth is 1")
     	if depth == 1:
