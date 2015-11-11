@@ -36,7 +36,7 @@ class LSTMEncoder(StatefulRNN):
         if decoder is not None:
             decoders += decoder
         self.decoders = decoders
-        #self.broadcast_state(decoders)# send hidden state to decoders
+        self.broadcast_state(decoders)# send hidden state to decoders
     def build(self):
         input_dim = self.input_shape[2]
         self.input = T.tensor3()
