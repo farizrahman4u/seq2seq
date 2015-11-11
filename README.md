@@ -33,7 +33,7 @@ Sequence to Sequence Learning with Keras
 
 Source : [A Neural Conversational Model](http://arxiv.org/pdf/1506.05869v1.pdf)
 
-* When `context_sensitive=True` do not forget to clear the hidden state of `Conversational` layer after every conversation(**Not after every exchange**) or a fixed number of batches using `reset_hidden_state()` during training and testing.
+* When `context_sensitive=True` do not forget to clear the hidden state of `Conversational` layer after every conversation(**Not after every exchange**) or a fixed number of batches using `reset_hidden_state()` during training and testing. You could use the `ResetState` callback for this purpose.
 
 * You will also have to clear the hidden state of `Seq2seq` layer after a fixed number of batches when used with `remember_state=True`.
 
