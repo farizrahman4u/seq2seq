@@ -3,6 +3,7 @@ from keras.models import Sequential
 class StatefulContainer(Sequential):
 	def __init__(self):
 		self.state = []#Mark this container as a stateful layer. Required for nested models. 
+		super(StatefulContainer, self).__init__()
 	def get_hidden_state(self):
 		return [l.get_hidden_state() if hasattr(l, 'state') else None for l in layers]	
 
