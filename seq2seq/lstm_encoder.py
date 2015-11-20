@@ -15,7 +15,7 @@ class LSTMEncoder(StatefulRNN):
                  init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one',
                  activation='tanh', inner_activation='hard_sigmoid',
                  weights=None, truncate_gradient=-1,
-                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, return_sequences = False,decoder=None,decoders=[], remember_state=False, **kwargs):
+                 input_dim=None, input_length=None, hidden_state=None, batch_size=None, return_sequences = False,decoder=None,decoders=[], remember_state=False, go_backwards=False, **kwargs):
         self.output_dim = output_dim
         self.init = initializations.get(init)
         self.inner_init = initializations.get(inner_init)
@@ -30,6 +30,7 @@ class LSTMEncoder(StatefulRNN):
         self.input_length = input_length
         self.remember_state = remember_state
         self.return_sequences = return_sequences
+        self.go_backwards = go_backwards
         if self.input_dim:
             kwargs['input_shape'] = (self.input_length, self.input_dim)
         super(LSTMEncoder, self).__init__(**kwargs)
@@ -113,7 +114,8 @@ class LSTMEncoder(StatefulRNN):
             sequences=[xi, xf, xo, xc, padded_mask],
             outputs_info=[self.h, self.c],
             non_sequences=[self.U_i, self.U_f, self.U_o, self.U_c],
-            truncate_gradient=self.truncate_gradient)
+            truncate_gradient=self.truncate_gradient,
+            go_backwards=self.go_backwards)
         if self.remember_state and self.state_input is None:
             self.updates = ((self.h, outputs[-1]),(self.c, memories[-1]))
         for o in self.state_outputs:
@@ -134,6 +136,7 @@ class LSTMEncoder(StatefulRNN):
                   "input_dim": self.input_dim,
                   "input_length": self.input_length,
                   "return_sequences": self.return_sequences,
-                  "remember_state": self.remember_state}
+                  "remember_state": self.remember_state,
+                  "go_backwards": self.go_backwards}
         base_config = super(LSTM, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
