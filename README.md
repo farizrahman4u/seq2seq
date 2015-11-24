@@ -63,6 +63,12 @@ model.add(embedding)
 model.add(seq2seq)
 ```
 
+
+**Installation:**
+
+```sudo pip install git+ssh://github.com/farizrahman4u/seq2seq.git```
+
+
 **Requirements:**
 
 * [Numpy](http://www.numpy.org/)
