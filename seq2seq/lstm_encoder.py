@@ -7,7 +7,8 @@ import numpy as np
 from keras import activations, initializations
 from keras.utils.theano_utils import shared_zeros, sharedX
 from six.moves import range
-from stateful_rnn import StatefulRNN
+
+from seq2seq.stateful_rnn import StatefulRNN
 
 class LSTMEncoder(StatefulRNN):
 

@@ -1,9 +1,10 @@
 # Deep LSTM with hidden state forwarding
 import keras
 from keras.models import Sequential
-from lstm_encoder import LSTMEncoder as lstm
 from keras.layers.core import RepeatVector
-from stateful_container import StatefulContainer
+
+from seq2seq.lstm_encoder import LSTMEncoder as lstm
+from seq2seq.stateful_container import StatefulContainer
 
 class DeepLSTM(StatefulContainer):
     def __init__(self, input_dim, output_dim, depth=2,

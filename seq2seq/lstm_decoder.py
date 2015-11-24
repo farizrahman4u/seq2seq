@@ -8,7 +8,8 @@ from keras import activations, initializations
 from keras.utils.theano_utils import shared_zeros, sharedX 
 from keras.layers.core import Layer, MaskedLayer
 from six.moves import range
-from stateful_rnn import StatefulRNN
+
+from seq2seq.stateful_rnn import StatefulRNN
 
 class LSTMDecoder(StatefulRNN):
     def __init__(self, dim, hidden_dim, output_length,

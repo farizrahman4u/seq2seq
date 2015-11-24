@@ -2,9 +2,9 @@ import keras
 from keras.models import Sequential
 from keras.layers.core import Dense
 
-from seq2seq import Seq2seq
-from lstm_encoder import LSTMEncoder
-from lstm_decoder import LSTMDecoder, LSTMDecoder2
+from seq2seq.seq2seq import Seq2seq
+from seq2seq.lstm_encoder import LSTMEncoder
+from seq2seq.lstm_decoder import LSTMDecoder, LSTMDecoder2
 
 class Conversational(Seq2seq):
 	def __init__(self, output_dim, hidden_dim,output_length, init='glorot_uniform', inner_init='orthogonal', forget_bias_init='one', activation='tanh', inner_activation='hard_sigmoid',
