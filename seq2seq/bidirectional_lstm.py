@@ -3,9 +3,10 @@
 #Reads input in forward and backward directions
 #For depth > 1, hidden state is  propogated throughout the LSTM stack
 
-from deep_lstm import DeepLSTM
-from stateful_container import StatefulContainer
 from keras.layers.core import TimeDistributedDense, Dropout, Merge
+
+from seq2seq.deep_lstm import DeepLSTM
+from seq2seq.stateful_container import StatefulContainer
 
 
 class BidirectionalLSTM(StatefulContainer):

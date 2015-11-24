@@ -1,5 +1,7 @@
 import keras
 from keras.models import Sequential
+
+
 class StatefulContainer(Sequential):
 	def __init__(self):
 		self.state = []#Mark this container as a stateful layer. Required for nested models. 
