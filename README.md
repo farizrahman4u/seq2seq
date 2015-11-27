@@ -46,7 +46,7 @@ Source : [A Neural Conversational Model](http://arxiv.org/pdf/1506.05869v1.pdf)
 import keras
 from keras.models import Sequential
 from keras.layers.embeddings import Embedding
-from seq2seq import Seq2seq
+from seq2seq.seq2seq import Seq2seq
 from keras.preprocessing import sequence
 
 vocab_size = 20000 #number of words
