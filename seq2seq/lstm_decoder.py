@@ -133,7 +133,7 @@ class LSTMDecoder(StatefulRNN):
             self.updates = ((self.h, hidden_states[-1]),(self.c, cell_states[-1]))
         for o in self.state_outputs:
             o.updates=((o.h, hidden_states[-1]),(o.c, cell_states[-1]))
-        return outputs
+        return outputs.dimshuffle((1, 0, 2)) 
 
     def get_config(self):
         config = {"name": self.__class__.__name__,
@@ -214,4 +214,4 @@ class LSTMDecoder2(LSTMDecoder):
             self.updates = ((self.h, hidden_states[-1]),(self.c, cell_states[-1]))
         for o in self.state_outputs:
             o.updates=((o.h, hidden_states[-1]),(o.c, cell_states[-1]))           
-        return outputs
+        return outputs.dimshuffle((1, 0, 2))
