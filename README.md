@@ -76,6 +76,6 @@ model.add(seq2seq)
 * [Keras](keras.io)
 
 
-**TODO:**
+**Working Example:**
 
-* Add examples with real datasets
+* [Training Seq2seq with movie subtitles](https://github.com/nicolas-ivanov/debug_seq2seq)  - Thanks to [Nicolas Ivanov](https://github.com/nicolas-ivanov)
