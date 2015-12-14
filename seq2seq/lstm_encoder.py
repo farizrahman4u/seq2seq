@@ -139,5 +139,5 @@ class LSTMEncoder(StatefulRNN):
                   "return_sequences": self.return_sequences,
                   "remember_state": self.remember_state,
                   "go_backwards": self.go_backwards}
-        base_config = super(LSTM, self).get_config()
+        base_config = super(LSTMEncoder, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
