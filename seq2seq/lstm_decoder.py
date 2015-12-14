@@ -148,7 +148,7 @@ class LSTMDecoder(StatefulRNN):
                   "output_length": self.output_length,
                   "remember_state": self.remember_state
                   }
-        base_config = super(FeedbackLSTM, self).get_config()
+        base_config = super(LSTMDecoder, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
     def set_weights(self, weights):
         assert len(self.params) == len(weights), 'Provided weight array does not match layer weights (' + \
