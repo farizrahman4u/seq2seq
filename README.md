@@ -13,7 +13,7 @@ Seq2seq contains modular and reusable layers that you can use to build your own 
 
 **A simple Seq2seq model:**
 
-```
+```python
 import seq2seq
 from seq2seq.models import SimpleSeq2seq
 
@@ -24,7 +24,7 @@ That's it! You have successfully compiled a minimal Seq2seq model! Next, let's b
 
 **Deep Seq2seq models:**
 
-```
+```python
 import seq2seq
 from seq2seq.models import SimpleSeq2seq
 
@@ -33,7 +33,7 @@ model.compile(loss='mse', optimizer='rmsprop')
 ```
 Notice that we have specified the depth for both encoder and decoder as 3, and your model has a total depth of 3 + 3 = 6. You can also specify different depths for the encoder and the decoder. Example:
 
-```
+```python
 import seq2seq
 from seq2seq.models import SimpleSeq2seq
 
@@ -47,7 +47,7 @@ Notice that the depth is specified as tuple, `(4, 5)`. Which means your encoder 
 
 Until now, you have been using the `SimpleSeq2seq` model, which is a very minimalistic model. In the actual Seq2seq implementation described in [[1]](http://arxiv.org/abs/1409.3215), the hidden state of the encoder is transferred to decoder. Also, the output of decoder at each timestep becomes the input to the decoder at the next time step. To make things more complicated, the hidden state is propogated throughout the LSTM stack. But you  have no reason to worry, as we have a built-in model that does all that out of the box. Example:
 
-```
+```python
 import seq2seq
 from seq2seq.models import Seq2seq
 
@@ -65,7 +65,7 @@ Let's not stop there. Let's build a model similar to [cho et al 2014](http://arx
 ![cho et al 2014](http://i64.tinypic.com/302aqhi.png)
 To achieve this, simply add the argument `peek=True`:
 
-```
+```python
 import seq2seq
 from seq2seq.models import Seq2seq
 
@@ -77,7 +77,7 @@ model.compile(loss='mse', optimizer='rmsprop')
 
 Let's not stop there either. In all the models described above, there is no allignment between the input sequence elements and the output sequence elements. But for machine translation, learning a soft allignment between the input and output sequences imporves performance.[[3]](http://arxiv.org/pdf/1409.0473v6.pdf). The Seq2seq framework includes a ready made attention model which does the same. Note that in the attention model, there is no hidden state propogation, and a bidirectional LSTM encoder is used by default. Example:
 
-```
+```python
 import seq2seq
 from seq2seq.models import AttentionSeq2seq
 
