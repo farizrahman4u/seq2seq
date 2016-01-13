@@ -4,12 +4,12 @@ from setuptools import find_packages
 install_requires = [
     'numpy==1.9.2',
     'Theano==0.7.0',
-    'Keras==0.2.0'
+    'Keras==0.3.0'
 ]
 
 setup(
-      name='Seq2seq',
-      version='0.0.1',
+      name='seq2seq',
+      version='0.0.2',
       description='Sequence to Sequence Learning with Keras',
       author='Fariz Rahman',
       author_email='farizrahman4u@gmail.com',
