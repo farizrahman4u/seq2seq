@@ -1,4 +1,4 @@
-# seq2seq
+# Seq2seq
 Sequence to Sequence Learning with Keras
 
 
