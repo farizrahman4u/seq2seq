@@ -62,7 +62,9 @@ You can also experiment with the hidden state propogation turned  off. Simply se
 **Peeky Seq2seq model**:
 
 Let's not stop there. Let's build a model similar to [cho et al 2014](http://arxiv.org/abs/1406.1078), where the decoder gets a 'peek' at the context vector at every timestep.
+
 ![cho et al 2014](http://i64.tinypic.com/302aqhi.png)
+
 To achieve this, simply add the argument `peek=True`:
 
 ```python
