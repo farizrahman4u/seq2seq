@@ -153,7 +153,7 @@ class Seq2seq(Seq2seqBase):
 			decoder = LSTMDecoder(hidden_dim=hidden_dim, output_length=output_length, state_input=encoder if broadcast else False, **kwargs)
 		lstms = []
 		for i in range(1, depth[0]):
-			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, return_sequences=True, **kwargs)
+			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state and (i != 1), return_sequences=True, **kwargs)
 			self.add(layer)
 			lstms.append(layer)
 			self.add(Dropout(dropout))
