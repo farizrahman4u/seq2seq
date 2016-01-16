@@ -341,9 +341,11 @@ class AttentionDecoder(LSTMDecoder2):
         self.input_length = self.input_shape[-2]
         if not self.input_length:
             raise Exception ('AttentionDecoder requires input_length.')
-        self.W_a = self.init((dim + hdim, 1))
+        self.W_h = self.init((dim, hdim))
+        self.b_h = K.zeros((hdim, ))
+        self.W_a = self.init((hdim, 1))
         self.b_a = K.zeros((1,))
-        self.params += [self.W_a, self.b_a]
+        self.params += [self.W_a, self.b_a, self.W_h, self.b_h]
 
     def _step(self,
               x_tm1,
@@ -351,7 +353,7 @@ class AttentionDecoder(LSTMDecoder2):
               u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, w_a, v_i, v_f, v_c, v_o, b_i, b_f, b_c, b_o, b_x, b_a):
         
         s_hat = K.repeat(s_tm1, self.input_length)
-        e = K.concatenate([H, s_hat])   
+        e = H + s_hat 
         def a(x, states):
             output = K.dot(x, w_a) + b_a
             return output, []
@@ -382,15 +384,19 @@ class AttentionDecoder(LSTMDecoder2):
        
     def get_output(self, train=False):
         H = self.get_input(train)
-        x = K.permute_dimensions(H, (1, 0, 2))[-1]
+        X = K.permute_dimensions(H, (1, 0, 2))[-1]
+        def reshape(x, states):
+            h = K.dot(x, self.W_h) + self.b_h
+            return h, []
+        _, H, _ = K.rnn(reshape, H, [], masking=False)
         if self.stateful or self.state_input or len(self.state_outputs) > 0:
             initial_states = self.states
         else:
-            initial_states = self.get_initial_states(x)
+            initial_states = self.get_initial_states(X)
         [outputs,hidden_states, cell_states], updates = theano.scan(
             self._step,
             n_steps = self.output_length,
-            outputs_info=[x] + initial_states,
+            outputs_info=[X] + initial_states,
             non_sequences=[H, self.U_i, self.U_f, self.U_o, self.U_c,
                           self.W_i, self.W_f, self.W_c, self.W_o,
                           self.W_x, self.W_a, self.V_i, self.V_f, self.V_c,
