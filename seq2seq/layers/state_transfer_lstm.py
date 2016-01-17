@@ -65,3 +65,9 @@ class StateTransferLSTM(LSTM):
             return outputs
         else:
             return last_output
+
+    def set_input_shape(self, shape):
+
+        self._input_shape = shape
+        self.build()
+
