@@ -16,6 +16,9 @@ Papers:
 
 
 class LSTMDecoder(StateTransferLSTM):
+
+    input_ndim = 2
+
     '''
     A basic LSTM decoder. Similar to [1].
     The output of at each timestep is the input to the next timestep.
