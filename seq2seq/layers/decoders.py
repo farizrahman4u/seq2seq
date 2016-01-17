@@ -29,7 +29,6 @@ class LSTMDecoder(StateTransferLSTM):
     state of the decoder. Checkout models.py to see how its done.
     '''
 
-    input_ndim = 2
 
     def __init__(self, output_length, hidden_dim=None, **kwargs):
 
