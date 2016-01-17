@@ -16,9 +16,6 @@ Papers:
 
 
 class LSTMDecoder(StateTransferLSTM):
-
-    input_ndim = 2
-
     '''
     A basic LSTM decoder. Similar to [1].
     The output of at each timestep is the input to the next timestep.
@@ -31,7 +28,7 @@ class LSTMDecoder(StateTransferLSTM):
     In addition, the hidden state of the encoder is usually used to initialize the hidden
     state of the decoder. Checkout models.py to see how its done.
     '''
-
+    input_ndim = 2
 
     def __init__(self, output_length, hidden_dim=None, **kwargs):
 
@@ -218,7 +215,7 @@ class LSTMDecoder(StateTransferLSTM):
             for i in range(2):
                 o.updates.append((o.states[i], states[i]))
 
-        return outputs.dimshuffle((1, 0, 2))
+        return K.permute_dimensions(outputs, (1, 0, 2))
 
     @property
     def output_shape(self):
@@ -297,7 +294,7 @@ class LSTMDecoder2(LSTMDecoder):
             for i in range(2):
                 o.updates.append((o.states[i], states[i]))
 
-        return outputs.dimshuffle((1, 0, 2))
+        return K.permute_dimensions(outputs, (1, 0, 2))
 
 
 class AttentionDecoder(LSTMDecoder2):
@@ -414,4 +411,4 @@ class AttentionDecoder(LSTMDecoder2):
             for i in range(2):
                 o.updates.append((o.states[i], states[i]))
 
-        return outputs.dimshuffle((1, 0, 2))
+        return K.permute_dimensions(outputs, (1, 0, 2))
