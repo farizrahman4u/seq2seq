@@ -348,11 +348,11 @@ class AttentionDecoder(LSTMDecoder2):
 
     def _step(self,
               x_tm1,
-              s_tm1, c_tm1, H,
+              h_tm1, c_tm1, H,
               u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, w_a, v_i, v_f, v_c, v_o, b_i, b_f, b_c, b_o, b_x, b_a):
-        
-        s_hat = K.repeat(s_tm1, self.input_length)
-        e = H + s_hat 
+
+        s_tm1 = K.repeat(c_tm1, self.input_length)
+        e = H + s_tm1
         def a(x, states):
             output = K.dot(x, w_a) + b_a
             return output, []
@@ -372,14 +372,14 @@ class AttentionDecoder(LSTMDecoder2):
         xc_t = K.dot(x_tm1, w_c) + K.dot(v, v_c) + b_c
         xo_t = K.dot(x_tm1, w_o) + K.dot(v, v_o) + b_o
 
-        i_t = self.inner_activation(xi_t + K.dot(s_tm1, u_i))
-        f_t = self.inner_activation(xf_t + K.dot(s_tm1, u_f))
-        c_t = f_t * c_tm1 + i_t * self.activation(xc_t + K.dot(s_tm1, u_c))
-        o_t = self.inner_activation(xo_t + K.dot(s_tm1, u_o))
-        s_t = o_t * self.activation(c_t)
+        i_t = self.inner_activation(xi_t + K.dot(h_tm1, u_i))
+        f_t = self.inner_activation(xf_t + K.dot(h_tm1, u_f))
+        c_t = f_t * c_tm1 + i_t * self.activation(xc_t + K.dot(h_tm1, u_c))
+        o_t = self.inner_activation(xo_t + K.dot(h_tm1, u_o))
+        h_t = o_t * self.activation(c_t)
 
-        x_t = K.dot(s_t, w_x) + b_x
-        return x_t, s_t, c_t
+        x_t = K.dot(h_t, w_x) + b_x
+        return x_t, h_t, c_t
        
     def get_output(self, train=False):
         H = self.get_input(train)
