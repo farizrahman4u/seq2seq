@@ -13,6 +13,8 @@ class StateTransferLSTM(LSTM):
     def  build(self):
         stateful = self.stateful
         self.stateful = stateful or self.state_input or len(self.state_outputs) > 0
+        if hasattr(self, 'states'):
+            del self.states
         super(StateTransferLSTM, self).build()
         self.stateful = stateful
 
