@@ -143,6 +143,7 @@ class Seq2seq(Seq2seqBase):
 	'''
 	def __init__(self, output_dim, hidden_dim, output_length, depth=1, broadcast_state=True, inner_broadcast_state=True, peek=False, dropout=0.25, **kwargs):
 		super(Seq2seq, self).__init__()
+		layers= []
 		if type(depth) not in [list, tuple]:
 			depth = (depth, depth)
 		broadcast = (depth[0] > 1 and inner_broadcast_state) or broadcast_state
@@ -154,32 +155,36 @@ class Seq2seq(Seq2seqBase):
 		lstms = []
 		for i in range(1, depth[0]):
 			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state and (i != 1), return_sequences=True, **kwargs)
-			self.add(layer)
+			layers.append(layer)
 			lstms.append(layer)
-			self.add(Dropout(dropout))
-		self.add(encoder)
-		self.add(Dropout(dropout))
-		self.add(Dense(hidden_dim if depth[1] > 1 else output_dim))
+			layers.append(Dropout(dropout))
+		layers.append(encoder)
+		layers.append(Dropout(dropout))
+		layers.append(Dense(hidden_dim if depth[1] > 1 else output_dim))
 		lstms.append(encoder)
 		if inner_broadcast_state:
 			for i in range(len(lstms) - 1):
 				lstms[i].broadcast_state(lstms[i + 1])
-		self.add(decoder)
+		layers.append(decoder)
 		if broadcast_state:
 			encoder.broadcast_state(decoder)
 		lstms = [decoder]
 		for i in range(1, depth[1]):
-			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, return_sequences=True, **kwargs)
-			self.add(layer)
+			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state and (i != 1), return_sequences=True, **kwargs)
+			layers.append(layer)
 			lstms.append(layer)
-			self.add(Dropout(dropout))
+			layers.append(Dropout(dropout))
 		if inner_broadcast_state:
 			for i in range(len(lstms) - 1):
 				lstms[i].broadcast_state(lstms[i + 1])
 		if depth[1] > 1:
-			self.add(TimeDistributedDense(output_dim))
+			layers.append(TimeDistributedDense(output_dim))
 		self.encoder = encoder
 		self.decoder = decoder
+		for l in layers:
+			self.add(l)
+		if depth[0] > 1:
+			self.layers[0].build()
 
 class AttentionSeq2seq(Seq2seqBase):
 
