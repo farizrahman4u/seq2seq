@@ -2,6 +2,8 @@
 from __future__ import absolute_import
 from keras import backend as K
 from keras.layers.recurrent import LSTM
+from keras import activations, initializations
+import numpy as np
 
 class StateTransferLSTM(LSTM):
 
@@ -37,21 +39,15 @@ class StateTransferLSTM(LSTM):
                                 'including the samples axis.')
 
         mask = self.get_output_mask(train)
-        if mask:
-            # apply mask
-            X *= K.cast(K.expand_dims(mask), X.dtype)
-            masking = True
-        else:
-            masking = False
 
         if self.stateful or self.state_input or len(self.state_outputs) > 0:
             initial_states = self.states
         else:
             initial_states = self.get_initial_states(X)
 
-        last_output, outputs, states = K.rnn(self.step, X, initial_states,
+        last_output, outputs, states = K.rnn(self.step, X, self.output_dim, initial_states,
                                              go_backwards=self.go_backwards,
-                                             masking=masking)
+                                             mask=mask)
         n = len(states)
         if self.stateful and not self.state_input:
             self.updates = []
@@ -72,4 +68,3 @@ class StateTransferLSTM(LSTM):
 
         self._input_shape = shape
         self.build()
-
