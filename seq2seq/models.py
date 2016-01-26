@@ -248,3 +248,44 @@ class AttentionSeq2seq(Seq2seqBase):
 			self.add(TimeDistributedDense(output_dim))
 		self.encoder = encoder
 		self.decoder = decoder
+
+
+class IndexShuffle(SimpleSeq2seq):
+	'''
+	This model is used for shuffling(re-ordering) the timesteps in 3D data.
+	It outputs the shuffled indices of the timesteps.
+
+	'''
+	def __init__(self, **kwargs):
+		length = None
+		if 'input_length' in kwargs:
+			length = kwargs['input_length']
+			#kwargs['output_length'] = length
+			#kwargs['output_dim'] = length
+		if 'input_shape' in kwargs:
+			length = kwargs['input_shape'][-2]
+			#kwargs['output_length'] = length
+			#kwargs['output_dim'] = length
+		elif 'batch_input_shape' in kwargs:
+			length = kwargs['batch_input_shape'][-2]
+			#kwargs['output_length'] = length
+			#kwargs['output_dim'] = length
+		if 'hidden_dim' not in kwargs:
+			kwargs['hidden_dim'] = length
+		super(IndexShuffle, self).__init__(output_dim=length, output_length=length, **kwargs)
+		self.add(Activation('softmax'))
+
+class SoftShuffle(IndexShuffle):
+	'''
+	Suffles the timesteps of 3D input. Can also mixup information across timesteps.
+
+	'''
+	def get_output(self, train=False):
+		indices = super(SoftShuffle, self).get_output(train)
+		X = self.get_input(train)
+		Y = T.batched_tensordot(indices, X,axes=[(1), (1)])
+		return Y
+
+	@property
+	def output_shape(self):
+	    return self.input_shape
