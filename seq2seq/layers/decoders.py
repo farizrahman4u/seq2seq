@@ -356,7 +356,7 @@ class AttentionDecoder(LSTMDecoder2):
         def a(x, states):
             output = K.dot(x, w_a) + b_a
             return output, []
-        _, energy, _ = K.rnn(a, e, [], masking=False)
+        _, energy, _ = K.rnn(a, e, [], mask=None)
         energy = activations.get('linear')(energy)
         energy = K.permute_dimensions(energy, (2, 0, 1))
         energy = energy[0]
@@ -387,7 +387,7 @@ class AttentionDecoder(LSTMDecoder2):
         def reshape(x, states):
             h = K.dot(x, self.W_h) + self.b_h
             return h, []
-        _, H, _ = K.rnn(reshape, H, [], masking=False)
+        _, H, _ = K.rnn(reshape, H, [], mask=None)
         if self.stateful or self.state_input or len(self.state_outputs) > 0:
             initial_states = self.states
         else:
