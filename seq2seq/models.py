@@ -6,7 +6,7 @@ from seq2seq.layers.encoders import LSTMEncoder
 from seq2seq.layers.decoders import LSTMDecoder, LSTMDecoder2, AttentionDecoder
 from seq2seq.layers.bidirectional import Bidirectional
 from keras.layers.recurrent import LSTM
-from keras.layers.core import RepeatVector, Dense, TimeDistributedDense, Dropout
+from keras.layers.core import RepeatVector, Dense, TimeDistributedDense, Dropout, Activation
 from keras.models import Sequential
 
 '''
