@@ -8,7 +8,7 @@ from seq2seq.layers.bidirectional import Bidirectional
 from keras.layers.recurrent import LSTM
 from keras.layers.core import RepeatVector, Dense, TimeDistributedDense, Dropout, Activation
 from keras.models import Sequential
-import theanno.tensor as T
+import theano.tensor as T
 
 '''
 Papers:
