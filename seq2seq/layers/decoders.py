@@ -361,7 +361,7 @@ class AttentionDecoder(LSTMDecoder2):
         energy = K.permute_dimensions(energy, (2, 0, 1))
         energy = energy[0]
         alpha = K.softmax(energy)
-        alpha = K.repeat(alpha, self.input_dim)
+        alpha = K.repeat(alpha, self.hidden_dim)
         alpha = K.permute_dimensions(alpha, (0, 2 , 1))
         weighted_H = H * alpha
         
