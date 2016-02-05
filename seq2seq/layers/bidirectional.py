@@ -113,7 +113,7 @@ class Bidirectional(MaskedLayer):
         return self.forward.get_input(train)
 
     @property
-    def params(self):
+    def trainable_weights(self):
         return self.forward.get_params()[0] + self.reverse.get_params()[0]
 
     @property
@@ -139,8 +139,8 @@ class Bidirectional(MaskedLayer):
                 self.reverse._input_shape = self._input_shape
                 self.forward.previous = self.previous
                 self.reverse.previous = self.previous
-                self.forward.params = []
-                self.reverse.params = []
+                self.forward.trainable_weights = []
+                self.reverse.trainable_weights = []
                 self.forward.build()
                 self.reverse.build()
 
