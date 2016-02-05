@@ -85,7 +85,7 @@ class LSTMDecoder(StateTransferLSTM):
         self.W_x = self.init((hdim, dim))
         self.b_x = K.zeros((dim))
 
-        self.params = [
+        self.trainable_weights = [
             self.W_i, self.U_i, self.b_i,
             self.W_c, self.U_c, self.b_c,
             self.W_f, self.U_f, self.b_f,
@@ -247,7 +247,7 @@ class LSTMDecoder2(LSTMDecoder):
         self.V_f = self.init((dim, hdim))
         self.V_c = self.init((dim, hdim))
         self.V_o = self.init((dim, hdim))
-        self.params += [self.V_i, self.V_c, self.V_f, self.V_o]
+        self.trainable_weights += [self.V_i, self.V_c, self.V_f, self.V_o]
 
     def _step(self,
               x_tm1,
@@ -344,7 +344,7 @@ class AttentionDecoder(LSTMDecoder2):
         self.b_h = K.zeros((hdim, ))
         self.W_a = self.init((hdim, 1))
         self.b_a = K.zeros((1,))
-        self.params += [self.W_a, self.b_a, self.W_h, self.b_h]
+        self.trainable_weights += [self.W_a, self.b_a, self.W_h, self.b_h]
 
     def _step(self,
               x_tm1,
