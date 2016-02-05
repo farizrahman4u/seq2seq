@@ -277,7 +277,7 @@ class SoftShuffle(IndexShuffle):
 	def get_output(self, train=False):
 		indices = super(SoftShuffle, self).get_output(train)
 		X = self.get_input(train)
-		assert K.backend == 'theano', "SoftShuffle requires theano backend."
+		assert K._BACKEND == 'theano', "SoftShuffle requires theano backend."
 		import theano.tensor as T
 		Y = T.batched_tensordot(indices, X,axes=[(1), (1)])
 		return Y
