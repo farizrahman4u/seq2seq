@@ -82,9 +82,9 @@ class Bidirectional(MaskedLayer):
             return K.permute_dimensions(rev, (1, 0, 2))
 
         X_rev = reverse(X) # 4,3,2,1,0,0,0
-        Y = self.forward(X, mask) # 0,0,0,1,3,6,10
+        Y = self.forward(X, mask=mask) # 0,0,0,1,3,6,10
         mask_rev = reverse(mask) if mask else None # 1,1,1,1,0,0,0
-        Y_rev = self.reverse(X_rev, mask_rev) # 4,7,9,10,10,10,10
+        Y_rev = self.reverse(X_rev, mask=mask_rev) # 4,7,9,10,10,10,10
 
         #Fix allignment
         if self.return_sequences:
@@ -113,7 +113,7 @@ class Bidirectional(MaskedLayer):
         return self.forward.get_input(train)
 
     @property
-    def trainable_weights(self):
+    def params(self):
         return self.forward.get_params()[0] + self.reverse.get_params()[0]
 
     @property
@@ -139,13 +139,13 @@ class Bidirectional(MaskedLayer):
                 self.reverse._input_shape = self._input_shape
                 self.forward.previous = self.previous
                 self.reverse.previous = self.previous
-                self.forward.trainable_weights = []
-                self.reverse.trainable_weights = []
+                self.forward.params = []
+                self.reverse.params = []
                 self.forward.build()
                 self.reverse.build()
 
     def get_config(self):
-        config = {"rnn": self.forward.get_config(),
+        config = {'name': self.__class__.__name__, "rnn": self.forward.get_config(),
                   "merge_mode": self.merge_mode}
         base_config = super(Bidirectional, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
