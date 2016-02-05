@@ -269,6 +269,7 @@ class IndexShuffle(SimpleSeq2seq):
 		super(IndexShuffle, self).__init__(output_dim=length, output_length=length, **kwargs)
 		self.add(Activation('softmax'))
 
+
 class SoftShuffle(IndexShuffle):
 	'''
 	Suffles the timesteps of 3D input. Can also mixup information across timesteps.
