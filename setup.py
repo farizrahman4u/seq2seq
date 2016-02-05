@@ -2,8 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 install_requires = [
-    'numpy==1.10.4',
-    'Theano==0.8.0.dev0',
+    'Theano',
     'Keras==0.3.1'
 ]
 
