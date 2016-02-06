@@ -8,7 +8,6 @@ from seq2seq.layers.bidirectional import Bidirectional
 from keras.layers.recurrent import LSTM
 from keras.layers.core import RepeatVector, Dense, TimeDistributedDense, Dropout, Activation
 from keras.models import Sequential
-import theano.tensor as T
 
 '''
 Papers:
@@ -261,20 +260,15 @@ class IndexShuffle(SimpleSeq2seq):
 		length = None
 		if 'input_length' in kwargs:
 			length = kwargs['input_length']
-			#kwargs['output_length'] = length
-			#kwargs['output_dim'] = length
 		if 'input_shape' in kwargs:
 			length = kwargs['input_shape'][-2]
-			#kwargs['output_length'] = length
-			#kwargs['output_dim'] = length
 		elif 'batch_input_shape' in kwargs:
 			length = kwargs['batch_input_shape'][-2]
-			#kwargs['output_length'] = length
-			#kwargs['output_dim'] = length
 		if 'hidden_dim' not in kwargs:
 			kwargs['hidden_dim'] = length
 		super(IndexShuffle, self).__init__(output_dim=length, output_length=length, **kwargs)
 		self.add(Activation('softmax'))
+
 
 class SoftShuffle(IndexShuffle):
 	'''
@@ -284,6 +278,8 @@ class SoftShuffle(IndexShuffle):
 	def get_output(self, train=False):
 		indices = super(SoftShuffle, self).get_output(train)
 		X = self.get_input(train)
+		assert K._BACKEND == 'theano', "SoftShuffle requires theano backend."
+		import theano.tensor as T
 		Y = T.batched_tensordot(indices, X,axes=[(1), (1)])
 		return Y
 

@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from keras import backend as K
 from keras import activations, initializations
 from seq2seq.layers.state_transfer_lstm import StateTransferLSTM
-import theano
 import numpy as np
 
 '''
@@ -109,7 +108,6 @@ class LSTMDecoder(StateTransferLSTM):
             self.states = [K.zeros((input_shape[0], self.hidden_dim)),
                            K.zeros((input_shape[0], self.hidden_dim))]
 
-    '''There is some bug in this code. Fixing it will make Seq2seq work on TensorFlow
 
     def step(self, x, states):
         #assert len(states) == 3
@@ -148,9 +146,9 @@ class LSTMDecoder(StateTransferLSTM):
         else:
             initial_states = self.get_initial_states(X)
         initial_states.append(X)
-        last_output, outputs, states = K.rnn(self.step, K.repeat(X, self.output_length), initial_states,
+        last_output, outputs, states = K.rnn(self.step, K.zeros((1, self.output_length, 1)), initial_states,
                                              go_backwards=self.go_backwards,
-                                             masking=False)
+                                             mask=None)
         if self.stateful and not self.state_input:
             self.updates = []
             for i in range(2):
@@ -161,7 +159,17 @@ class LSTMDecoder(StateTransferLSTM):
                 o.updates.append((o.states[i], states[i]))
 
         return outputs
-    '''
+
+    def set_input_shape(self, input_shape):
+        if type(input_shape) not in [tuple, list]:
+            raise Exception('Invalid input shape - input_shape should be a tuple of int.')
+        input_shape = list(input_shape)
+        if len(input_shape) == 3 and (self.__class__.__name__ in ['LSTMDecoder', 'LSTMDecoder2']):
+            input_shape.pop(1)
+        input_shape = tuple(input_shape)
+        self._input_shape = input_shape
+        self.input = K.placeholder(shape=self._input_shape)
+        self.build()
 
     def get_initial_states(self, X):
         # build an all-zero tensor of shape (samples, hidden_dim)
@@ -171,59 +179,18 @@ class LSTMDecoder(StateTransferLSTM):
         initial_states = [initial_state for _ in range(len(self.states))]
         return initial_states
 
-    def _step(self,
-              x_tm1,
-              h_tm1, c_tm1,
-              u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, b_i, b_f, b_c, b_o, b_x):
-
-        xi_t = K.dot(x_tm1, w_i) + b_i
-        xf_t = K.dot(x_tm1, w_f) + b_f
-        xc_t = K.dot(x_tm1, w_c) + b_c
-        xo_t = K.dot(x_tm1, w_o) + b_o
-
-        i_t = self.inner_activation(xi_t + K.dot(h_tm1, u_i))
-        f_t = self.inner_activation(xf_t + K.dot(h_tm1, u_f))
-        c_t = f_t * c_tm1 + i_t * self.activation(xc_t + K.dot(h_tm1, u_c))
-        o_t = self.inner_activation(xo_t + K.dot(h_tm1, u_o))
-        h_t = o_t * self.activation(c_t)
-
-        x_t = K.dot(h_t, w_x) + b_x
-        return x_t, h_t, c_t
-
-    def get_output(self, train=False):
-        x_t = self.get_input(train)
-        if self.stateful or self.state_input or len(self.state_outputs) > 0:
-            initial_states = self.states
-        else:
-            initial_states = self.get_initial_states(x_t)
-        [outputs, hidden_states, cell_states], updates = theano.scan(
-            self._step,
-            n_steps=self.output_length,
-            outputs_info=[x_t] + initial_states,
-            non_sequences=[self.U_i, self.U_f, self.U_o, self.U_c,
-                           self.W_i, self.W_f, self.W_c, self.W_o,
-                           self.W_x, self.b_i, self.b_f, self.b_c,
-                           self.b_o, self.b_x])
-
-        states = [hidden_states[-1], cell_states[-1]]
-        if self.stateful and not self.state_input:
-            self.updates = []
-            for i in range(2):
-                self.updates.append((self.states[i], states[i]))
-        for o in self.state_outputs:
-            o.updates = []
-            for i in range(2):
-                o.updates.append((o.states[i], states[i]))
-
-        return K.permute_dimensions(outputs, (1, 0, 2))
-
     @property
     def output_shape(self):
         shape = list(super(LSTMDecoder, self).output_shape)
         shape[1] = self.output_length
         return tuple(shape)
 
-    
+    def get_config(self):
+        config = {'name': self.__class__.__name__, 
+        'hidden_dim': self.hidden_dim,
+        'output_length': self.output_length}
+        base_config = super(LSTMDecoder, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 class LSTMDecoder2(LSTMDecoder):
@@ -249,42 +216,45 @@ class LSTMDecoder2(LSTMDecoder):
         self.V_o = self.init((dim, hdim))
         self.trainable_weights += [self.V_i, self.V_c, self.V_f, self.V_o]
 
-    def _step(self,
-              x_tm1,
-              h_tm1, c_tm1, v,
-              u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, v_i, v_f, v_c, v_o, b_i, b_f, b_c, b_o, b_x):
+    def step(self, v, states):
+        h_tm1 = states[0]
+        c_tm1 = states[1]
+        x_tm1 = states[2]
 
-        #Inputs = output from previous time step, vector from encoder
-        xi_t = K.dot(x_tm1, w_i) + K.dot(v, v_i) + b_i
-        xf_t = K.dot(x_tm1, w_f) + K.dot(v, v_f) + b_f
-        xc_t = K.dot(x_tm1, w_c) + K.dot(v, v_c) + b_c
-        xo_t = K.dot(x_tm1, w_o) + K.dot(v, v_o) + b_o
+        x_i = K.dot(x_tm1, self.W_i) + K.dot(v, self.V_i) + self.b_i
+        x_f = K.dot(x_tm1, self.W_f) + K.dot(v, self.V_f) + self.b_f
+        x_c = K.dot(x_tm1, self.W_c) + K.dot(v, self.V_c)+ self.b_c
+        x_o = K.dot(x_tm1, self.W_o) + K.dot(v, self.V_o) + self.b_o
 
-        i_t = self.inner_activation(xi_t + K.dot(h_tm1, u_i))
-        f_t = self.inner_activation(xf_t + K.dot(h_tm1, u_f))
-        c_t = f_t * c_tm1 + i_t * self.activation(xc_t + K.dot(h_tm1, u_c))
-        o_t = self.inner_activation(xo_t + K.dot(h_tm1, u_o))
-        h_t = o_t * self.activation(c_t)
+        i = self.inner_activation(x_i + K.dot(h_tm1, self.U_i))
+        f = self.inner_activation(x_f + K.dot(h_tm1, self.U_f))
+        c = f * c_tm1 + i * self.activation(x_c + K.dot(h_tm1, self.U_c))
+        o = self.inner_activation(x_o + K.dot(h_tm1, self.U_o))
+        h = o * self.activation(c)
 
-        x_t = K.dot(h_t, w_x) + b_x
-        return x_t, h_t, c_t
+        x = K.dot(h, self.W_x) + self.b_x
+
+        return x, [h, c, x]
 
     def get_output(self, train=False):
-        v = self.get_input(train)
+
+        X = self.get_input(train)
+        if K._BACKEND == 'tensorflow':
+            if not self.input_shape[1]:
+                raise Exception('When using TensorFlow, you should define ' +
+                                'explicitly the number of timesteps of ' +
+                                'your sequences. Make sure the first layer ' +
+                                'has a "batch_input_shape" argument ' +
+                                'including the samples axis.')
+
         if self.stateful or self.state_input or len(self.state_outputs) > 0:
             initial_states = self.states
         else:
-            initial_states = self.get_initial_states(v)        
-        [outputs,hidden_states, cell_states], updates = theano.scan(
-            self._step,
-            n_steps = self.output_length,
-            outputs_info=[v] + initial_states,
-            non_sequences=[v, self.U_i, self.U_f, self.U_o, self.U_c,
-                          self.W_i, self.W_f, self.W_c, self.W_o,
-                          self.W_x, self.V_i, self.V_f, self.V_c,
-                          self.V_o, self.b_i, self.b_f, self.b_c, 
-                          self.b_o, self.b_x])
-        states = [hidden_states[-1], cell_states[-1]]
+            initial_states = self.get_initial_states(X)
+        initial_states.append(X)
+        last_output, outputs, states = K.rnn(self.step, K.repeat(X, self.output_length), initial_states,
+                                             go_backwards=self.go_backwards,
+                                             mask=None)
         if self.stateful and not self.state_input:
             self.updates = []
             for i in range(2):
@@ -294,7 +264,12 @@ class LSTMDecoder2(LSTMDecoder):
             for i in range(2):
                 o.updates.append((o.states[i], states[i]))
 
-        return K.permute_dimensions(outputs, (1, 0, 2))
+        return outputs
+
+    def get_config(self):
+        config = {'name': self.__class__.__name__}
+        base_config = super(LSTMDecoder2, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 class AttentionDecoder(LSTMDecoder2):
@@ -346,15 +321,15 @@ class AttentionDecoder(LSTMDecoder2):
         self.b_a = K.zeros((1,))
         self.trainable_weights += [self.W_a, self.b_a, self.W_h, self.b_h]
 
-    def _step(self,
-              x_tm1,
-              h_tm1, c_tm1, H,
-              u_i, u_f, u_o, u_c, w_i, w_f, w_c, w_o, w_x, w_a, v_i, v_f, v_c, v_o, b_i, b_f, b_c, b_o, b_x, b_a):
-
+    def step(self, x, states):
+        h_tm1 = states[0]
+        c_tm1 = states[1]
+        H = states[2]
+        x_tm1 = states[3]
         s_tm1 = K.repeat(c_tm1, self.input_length)
         e = H + s_tm1
         def a(x, states):
-            output = K.dot(x, w_a) + b_a
+            output = K.dot(x, self.W_a) + self.b_a
             return output, []
         _, energy, _ = K.rnn(a, e, [], mask=None)
         energy = activations.get('linear')(energy)
@@ -364,23 +339,19 @@ class AttentionDecoder(LSTMDecoder2):
         alpha = K.repeat(alpha, self.hidden_dim)
         alpha = K.permute_dimensions(alpha, (0, 2 , 1))
         weighted_H = H * alpha
-        
         v = K.sum(weighted_H, axis=1)
+        x_i = K.dot(x_tm1, self.W_i) + K.dot(v, self.V_i) + self.b_i
+        x_f = K.dot(x_tm1, self.W_f) + K.dot(v, self.V_f) + self.b_f
+        x_c = K.dot(x_tm1, self.W_c) + K.dot(v, self.V_c)+ self.b_c
+        x_o = K.dot(x_tm1, self.W_o) + K.dot(v, self.V_o) + self.b_o
+        i = self.inner_activation(x_i + K.dot(h_tm1, self.U_i))
+        f = self.inner_activation(x_f + K.dot(h_tm1, self.U_f))
+        c = f * c_tm1 + i * self.activation(x_c + K.dot(h_tm1, self.U_c))
+        o = self.inner_activation(x_o + K.dot(h_tm1, self.U_o))
+        h = o * self.activation(c)
+        x = K.dot(h, self.W_x) + self.b_x
+        return x, [h, c, H, x]
 
-        xi_t = K.dot(x_tm1, w_i) + K.dot(v, v_i) + b_i
-        xf_t = K.dot(x_tm1, w_f) + K.dot(v, v_f) + b_f
-        xc_t = K.dot(x_tm1, w_c) + K.dot(v, v_c) + b_c
-        xo_t = K.dot(x_tm1, w_o) + K.dot(v, v_o) + b_o
-
-        i_t = self.inner_activation(xi_t + K.dot(h_tm1, u_i))
-        f_t = self.inner_activation(xf_t + K.dot(h_tm1, u_f))
-        c_t = f_t * c_tm1 + i_t * self.activation(xc_t + K.dot(h_tm1, u_c))
-        o_t = self.inner_activation(xo_t + K.dot(h_tm1, u_o))
-        h_t = o_t * self.activation(c_t)
-
-        x_t = K.dot(h_t, w_x) + b_x
-        return x_t, h_t, c_t
-       
     def get_output(self, train=False):
         H = self.get_input(train)
         X = K.permute_dimensions(H, (1, 0, 2))[-1]
@@ -388,20 +359,22 @@ class AttentionDecoder(LSTMDecoder2):
             h = K.dot(x, self.W_h) + self.b_h
             return h, []
         _, H, _ = K.rnn(reshape, H, [], mask=None)
+        if K._BACKEND == 'tensorflow':
+            if not self.input_shape[1]:
+                raise Exception('When using TensorFlow, you should define ' +
+                                'explicitly the number of timesteps of ' +
+                                'your sequences. Make sure the first layer ' +
+                                'has a "batch_input_shape" argument ' +
+                                'including the samples axis.')
+
         if self.stateful or self.state_input or len(self.state_outputs) > 0:
             initial_states = self.states
         else:
             initial_states = self.get_initial_states(X)
-        [outputs,hidden_states, cell_states], updates = theano.scan(
-            self._step,
-            n_steps = self.output_length,
-            outputs_info=[X] + initial_states,
-            non_sequences=[H, self.U_i, self.U_f, self.U_o, self.U_c,
-                          self.W_i, self.W_f, self.W_c, self.W_o,
-                          self.W_x, self.W_a, self.V_i, self.V_f, self.V_c,
-                          self.V_o, self.b_i, self.b_f, self.b_c, 
-                          self.b_o, self.b_x, self.b_a])
-        states = [hidden_states[-1], cell_states[-1]]
+        initial_states += [H, X]
+        last_output, outputs, states = K.rnn(self.step, K.zeros((1, self.output_length, 1)), initial_states,
+                                             go_backwards=self.go_backwards,
+                                             mask=None)
         if self.stateful and not self.state_input:
             self.updates = []
             for i in range(2):
@@ -410,5 +383,9 @@ class AttentionDecoder(LSTMDecoder2):
             o.updates = []
             for i in range(2):
                 o.updates.append((o.states[i], states[i]))
+        return outputs
 
-        return K.permute_dimensions(outputs, (1, 0, 2))
+    def get_config(self):
+        config = {'name': self.__class__.__name__}
+        base_config = super(AttentionDecoder, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
