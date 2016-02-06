@@ -372,7 +372,7 @@ class AttentionDecoder(LSTMDecoder2):
         else:
             initial_states = self.get_initial_states(X)
         initial_states += [H, X]
-        last_output, outputs, states = K.rnn(self.step, K.zeros(1, self.output_length, 1), initial_states,
+        last_output, outputs, states = K.rnn(self.step, K.zeros((1, self.output_length, 1)), initial_states,
                                              go_backwards=self.go_backwards,
                                              mask=None)
         if self.stateful and not self.state_input:
