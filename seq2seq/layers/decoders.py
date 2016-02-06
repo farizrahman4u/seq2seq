@@ -329,7 +329,7 @@ class AttentionDecoder(LSTMDecoder2):
         s_tm1 = K.repeat(c_tm1, self.input_length)
         e = H + s_tm1
         def a(x, states):
-            output = K.dot(x, w_a) + b_a
+            output = K.dot(x, self.W_a) + self.b_a
             return output, []
         _, energy, _ = K.rnn(a, e, [], mask=None)
         energy = activations.get('linear')(energy)
@@ -387,5 +387,5 @@ class AttentionDecoder(LSTMDecoder2):
 
     def get_config(self):
         config = {'name': self.__class__.__name__}
-        base_config = super(LSTMDecoder2, self).get_config()
+        base_config = super(AttentionDecoder, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
