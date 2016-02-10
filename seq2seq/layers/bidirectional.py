@@ -2,9 +2,9 @@ from __future__ import division
 from keras import backend as K
 from keras.layers.core import MaskedLayer
 try:
-    import cPickle
+    import cPickle as pickle
 except ImportError:
-    import pickle as cPickle
+    import pickle
 
 
 class Bidirectional(MaskedLayer):
@@ -29,7 +29,7 @@ class Bidirectional(MaskedLayer):
     def __init__(self, rnn, merge_mode='concat', weights=None):
 
         self.forward = rnn
-        self.reverse = cPickle.loads(cPickle.dumps(rnn))
+        self.reverse = pickle.loads(pickle.dumps(rnn))
         self.merge_mode = merge_mode
         if weights:
             nw = len(weights)
