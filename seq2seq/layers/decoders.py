@@ -169,7 +169,12 @@ class LSTMDecoder(StateTransferLSTM):
         shape[1] = self.output_length
         return tuple(shape)
 
-    
+    def get_config(self):
+        config = {'name': self.__class__.__name__, 
+        'hidden_dim': self.hidden_dim,
+        'output_length': self.output_length}
+        base_config = super(LSTMDecoder, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 class LSTMDecoder2(LSTMDecoder):
@@ -241,6 +246,11 @@ class LSTMDecoder2(LSTMDecoder):
                 o.updates.append((o.states[i], states[i]))
 
         return K.permute_dimensions(outputs, (1, 0, 2))
+
+    def get_config(self):
+        config = {'name': self.__class__.__name__}
+        base_config = super(LSTMDecoder2, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 class AttentionDecoder(LSTMDecoder2):
@@ -358,3 +368,8 @@ class AttentionDecoder(LSTMDecoder2):
                 o.updates.append((o.states[i], states[i]))
 
         return K.permute_dimensions(outputs, (1, 0, 2))
+
+    def get_config(self):
+        config = {'name': self.__class__.__name__}
+        base_config = super(AttentionDecoder, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
