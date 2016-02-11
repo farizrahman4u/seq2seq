@@ -109,60 +109,6 @@ class LSTMDecoder(StateTransferLSTM):
             self.states = [K.zeros((input_shape[0], self.hidden_dim)),
                            K.zeros((input_shape[0], self.hidden_dim))]
 
-    '''There is some bug in this code. Fixing it will make Seq2seq work on TensorFlow
-
-    def step(self, x, states):
-        #assert len(states) == 3
-        h_tm1 = states[0]
-        c_tm1 = states[1]
-        x_tm1 = states[2]
-
-        x_i = K.dot(x_tm1, self.W_i) + self.b_i
-        x_f = K.dot(x_tm1, self.W_f) + self.b_f
-        x_c = K.dot(x_tm1, self.W_c) + self.b_c
-        x_o = K.dot(x_tm1, self.W_o) + self.b_o
-
-        i = self.inner_activation(x_i + K.dot(h_tm1, self.U_i))
-        f = self.inner_activation(x_f + K.dot(h_tm1, self.U_f))
-        c = f * c_tm1 + i * self.activation(x_c + K.dot(h_tm1, self.U_c))
-        o = self.inner_activation(x_o + K.dot(h_tm1, self.U_o))
-        h = o * self.activation(c)
-
-        x = K.dot(h, self.W_x) + self.b_x
-
-        return x, [h, c, x]
-
-    def get_output(self, train=False):
-
-        X = self.get_input(train)
-        if K._BACKEND == 'tensorflow':
-            if not self.input_shape[1]:
-                raise Exception('When using TensorFlow, you should define ' +
-                                'explicitly the number of timesteps of ' +
-                                'your sequences. Make sure the first layer ' +
-                                'has a "batch_input_shape" argument ' +
-                                'including the samples axis.')
-
-        if self.stateful or self.state_input or len(self.state_outputs) > 0:
-            initial_states = self.states
-        else:
-            initial_states = self.get_initial_states(X)
-        initial_states.append(X)
-        last_output, outputs, states = K.rnn(self.step, K.repeat(X, self.output_length), initial_states,
-                                             go_backwards=self.go_backwards,
-                                             masking=False)
-        if self.stateful and not self.state_input:
-            self.updates = []
-            for i in range(2):
-                self.updates.append((self.states[i], states[i]))
-        for o in self.state_outputs:
-            o.updates = []
-            for i in range(2):
-                o.updates.append((o.states[i], states[i]))
-
-        return outputs
-    '''
-
     def get_initial_states(self, X):
         # build an all-zero tensor of shape (samples, hidden_dim)
         initial_state = K.zeros_like(X)  # (samples, input_dim)
