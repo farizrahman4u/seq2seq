@@ -1,14 +1,17 @@
+from __future__ import division
 from keras import backend as K
-from copy import deepcopy
-import cPickle
-from warnings import warn
 from keras.layers.core import MaskedLayer
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 
 class Bidirectional(MaskedLayer):
     ''' Bidirectional wrapper for RNNs
 
     # Arguments:
-        rnn: `Recurrent` object. 
+        rnn: `Recurrent` object.
         merge_mode: Mode by which outputs of the forward and reverse RNNs will be combined. One of {sum, mul, concat, ave}
 
     # Examples:
@@ -16,7 +19,7 @@ class Bidirectional(MaskedLayer):
     model = Sequential()
     model.add(Bidirectional(LSTM(10, input_shape=(10, 20))))
     model.add(Activation('softmax'))
-    
+
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     model.fit([X_train,], Y_train, batch_size=32, nb_epoch=20,
@@ -26,12 +29,12 @@ class Bidirectional(MaskedLayer):
     def __init__(self, rnn, merge_mode='concat', weights=None):
 
         self.forward = rnn
-        self.reverse = cPickle.loads(cPickle.dumps(rnn))
+        self.reverse = pickle.loads(pickle.dumps(rnn))
         self.merge_mode = merge_mode
         if weights:
             nw = len(weights)
-            self.forward.initial_weights = weights[:nw/2]
-            self.reverse.initial_weights = weights[nw/2:]
+            self.forward.initial_weights = weights[:nw//2]
+            self.reverse.initial_weights = weights[nw//2:]
         self._cache_enabled = True
         self.stateful = rnn.stateful
         self.return_sequences = rnn.return_sequences
@@ -45,8 +48,8 @@ class Bidirectional(MaskedLayer):
 
     def set_weights(self, weights):
         nw = len(weights)
-        self.forward.set_weights(weights[:nw/2])
-        self.reverse.set_weights(weights[:nw/2])
+        self.forward.set_weights(weights[:nw//2])
+        self.reverse.set_weights(weights[:nw//2])
 
     def set_previous(self, layer):
         self.previous = layer
@@ -122,7 +125,7 @@ class Bidirectional(MaskedLayer):
 
     @property
     def regularizers(self):
-        return self.forward.get_params()[1] + self.reverse.get_params()[1] 
+        return self.forward.get_params()[1] + self.reverse.get_params()[1]
 
     @property
     def constraints(self):
