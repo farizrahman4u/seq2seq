@@ -49,7 +49,7 @@ class Bidirectional(MaskedLayer):
     def set_weights(self, weights):
         nw = len(weights)
         self.forward.set_weights(weights[:nw//2])
-        self.reverse.set_weights(weights[:nw//2])
+        self.reverse.set_weights(weights[nw//2:])
 
     def set_previous(self, layer):
         self.previous = layer
@@ -127,6 +127,19 @@ class Bidirectional(MaskedLayer):
     @property
     def trainable_weights(self):
         return self.forward.trainable_weights + self.reverse.trainable_weights
+
+    @trainable_weights.setter
+    def trainable_weights(self, weights):
+        nw = len(weights)
+        self.forward.trainable_weights = weights[:nw//2]
+        self.reverse.trainable_weights = weights[nw//2:]
+
+    @non_trainable_weights.setter
+    def non_trainable_weights(self, weights):
+        nw = len(weights)
+        self.forward.non_trainable_weights = weights[:nw//2]
+        self.reverse.non_trainable_weights = weights[nw//2:]
+
 
     @property
     def regularizers(self):
