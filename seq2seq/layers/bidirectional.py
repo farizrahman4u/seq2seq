@@ -1,13 +1,13 @@
 from __future__ import division
 from keras import backend as K
-from keras.layers.core import MaskedLayer
+from keras.layers.core import Layer
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
 
-class Bidirectional(MaskedLayer):
+class Bidirectional(Layer):
     ''' Bidirectional wrapper for RNNs
 
     # Arguments:
@@ -38,10 +38,7 @@ class Bidirectional(MaskedLayer):
         self._cache_enabled = True
         self.stateful = rnn.stateful
         self.return_sequences = rnn.return_sequences
-        if hasattr(rnn, '_input_shape'):
-            self._input_shape = rnn.input_shape
-        elif hasattr(rnn, 'previous') and rnn.previous:
-            self.previous = rnn.previous
+        super(Bidirectional, self).__init__()
 
     def get_weights(self):
         return self.forward.get_weights() + self.reverse.get_weights()
@@ -50,12 +47,6 @@ class Bidirectional(MaskedLayer):
         nw = len(weights)
         self.forward.set_weights(weights[:nw//2])
         self.reverse.set_weights(weights[nw//2:])
-
-    def set_previous(self, layer):
-        self.previous = layer
-        self.forward.set_previous(layer)
-        self.reverse.set_previous(layer)
-        self._input_shape = layer.output_shape
 
     @property
     def cache_enabled(self):
@@ -67,19 +58,15 @@ class Bidirectional(MaskedLayer):
         self.forward.cache_enabled = value
         self.reverse.cache_enabled = value
 
-    @property
-    def output_shape(self):
+    def get_output_shape_for(self, input_shape):
         if self.merge_mode in ['sum', 'ave', 'mul']:
-            return self.forward.output_shape
+            return self.forward.get_output_shape_for(input_shape)
         elif self.merge_mode == 'concat':
-            shape = list(self.forward.output_shape)
+            shape = list(self.forward.get_output_shape_for(input_shape))
             shape[-1] *= 2
             return tuple(shape)
 
-    def get_output(self, train=False):
-        X = self.get_input(train) # 0,0,0,1,2,3,4
-        mask = self.get_input_mask(train) # 0,0,0,1,1,1,1
-
+    def call(self, X, mask=None):
         def reverse(x):
             if K.ndim == 2:
                 x = K.expand_dims(x, -1)
@@ -89,10 +76,10 @@ class Bidirectional(MaskedLayer):
                 rev = K.permute_dimensions(x, (1, 0, 2))[::-1]                
             return K.permute_dimensions(rev, (1, 0, 2))
 
+        Y = self.forward.call(X, mask) # 0,0,0,1,3,6,10
         X_rev = reverse(X) # 4,3,2,1,0,0,0
-        Y = self.forward(X, mask) # 0,0,0,1,3,6,10
         mask_rev = reverse(mask) if mask else None # 1,1,1,1,0,0,0
-        Y_rev = self.reverse(X_rev, mask_rev) # 4,7,9,10,10,10,10
+        Y_rev = self.reverse.call(X_rev, mask_rev) # 4,7,9,10,10,10,10
 
         #Fix allignment
         if self.return_sequences:
@@ -106,12 +93,6 @@ class Bidirectional(MaskedLayer):
             return (Y + Y_rev) / 2
         elif self.merge_mode == 'mul':
             return Y * Y_rev
-
-    def get_output_mask(self, train=False):
-        if self.forward.return_sequences:
-            return self.get_input_mask(train)
-        else:
-            return None
 
     @property
     def input_shape(self):
@@ -140,34 +121,14 @@ class Bidirectional(MaskedLayer):
         self.forward.non_trainable_weights = weights[:nw//2]
         self.reverse.non_trainable_weights = weights[nw//2:]
 
-
-    @property
-    def regularizers(self):
-        return self.forward.get_params()[1] + self.reverse.get_params()[1]
-
-    @property
-    def constraints(self):
-        return self.forward.get_params()[2] + self.reverse.get_params()[2]
-
-    @property
-    def updates(self):
-        return self.forward.get_params()[3] + self.reverse.get_params()[3]
-
     def reset_states(self):
         self.forward.reset_states()
         self.reverse.reset_states()
 
-    def build(self):
-        if not hasattr(self.forward, '_input_shape'):
-            if hasattr(self, '_input_shape'):
-                self.forward._input_shape = self._input_shape
-                self.reverse._input_shape = self._input_shape
-                self.forward.previous = self.previous
-                self.reverse.previous = self.previous
-                self.forward.trainable_weights = []
-                self.reverse.trainable_weights = []
-                self.forward.build()
-                self.reverse.build()
+    def build(self, input_shape):
+        self.forward.build(input_shape)
+        self.reverse.build(input_shape)
+        super(Bidirectional, self).build(input_shape)
 
     def get_config(self):
         config = {
