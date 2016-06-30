@@ -39,6 +39,8 @@ def get_state_transfer_rnn(RNN):
             for rnn in rnns:
                 rnn.state_input = self
             for rnn in rnns:
+                if not hasattr(rnn, 'updates'):
+                    rnn.updates = []
                 for i in range(len(rnn.states)):
                     rnn.updates.append((rnn.states[i], self.states_to_transfer[i]))
 
@@ -75,7 +77,6 @@ def get_state_transfer_rnn(RNN):
 
             n = len(states)
             if self.stateful and not self.state_input:
-                self.updates = []
                 self.updates = []
                 for i in range(n):
                     self.updates.append((self.states[i], states[i]))
