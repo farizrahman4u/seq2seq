@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 from keras import backend as K
 from keras import activations, initializations
-from seq2seq.layers.state_transfer_lstm import StateTransferLSTM
+from seq2seq.layers.state_transfer_rnn import StateTransferLSTM
 import theano
 import numpy as np
 
