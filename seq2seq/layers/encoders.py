@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from seq2seq.layers.state_transfer_lstm import StateTransferLSTM
+from seq2seq.layers.state_transfer_rnn import StateTransferLSTM
 
 class LSTMEncoder(StateTransferLSTM):
 
