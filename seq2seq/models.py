@@ -126,12 +126,12 @@ class Seq2seq(Sequential):
 			shape = (None, None, kwargs['input_dim'])
 			del kwargs['input_dim']
 		lstms = []
-		layer = LSTMEncoder(batch_input_shape=shape, output_dim=hidden_dim, state_input=False, **kwargs)
+		layer = LSTMEncoder(batch_input_shape=shape, output_dim=hidden_dim, state_input=False, return_sequences=depth[0] > 1, **kwargs)
 		self.add(layer)
 		lstms += [layer]
 		for i in range(depth[0] - 1):
 			self.add(Dropout(dropout))
-			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, **kwargs)
+			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, return_sequences=i < depth[0] - 2, **kwargs)
 			self.add(layer)
 			lstms += [layer]
 		if inner_broadcast_state:
@@ -145,7 +145,7 @@ class Seq2seq(Sequential):
 		lstms = [decoder]
 		for i in range(depth[1] - 1):
 			self.add(Dropout(dropout))
-			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, **kwargs)
+			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, return_sequences=True, **kwargs)
 			self.add(layer)
 			lstms += [layer]
 			self.add(Dropout(dropout))
