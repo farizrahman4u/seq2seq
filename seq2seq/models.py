@@ -46,7 +46,7 @@ class SimpleSeq2seq(Sequential):
 		if type(depth) not in [list, tuple]:
 			depth = (depth, depth)
 		self.encoder = LSTM(hidden_dim, **kwargs)
-		self.decoder = LSTM(hidden_dim if depth[1]>1 else output_dim, return_sequences=True, **kwargs)
+		self.decoder = LSTM(hidden_dim, return_sequences=True, **kwargs)
 		for i in range(1, depth[0]):
 			self.add(LSTM(hidden_dim, return_sequences=True, **kwargs))
 			self.add(Dropout(dropout))
@@ -57,8 +57,7 @@ class SimpleSeq2seq(Sequential):
 		for i in range(1, depth[1]):
 			self.add(LSTM(hidden_dim, return_sequences=True, **kwargs))
 			self.add(Dropout(dropout))
-		if depth[1] > 1:
-			self.add(TimeDistributed(Dense(output_dim)))
+		self.add(TimeDistributed(Dense(output_dim)))
 
 class Seq2seq(Sequential):
 	'''
@@ -222,9 +221,8 @@ class AttentionSeq2seq(Sequential):
 		for i in range(0, depth[1] - 1):
 			self.add(Dropout(dropout))
 			self.add(LSTMEncoder(output_dim=hidden_dim, state_input=False, return_sequences=True, **kwargs))
-		if depth[1] > 1:
-			self.add(Dropout(dropout))
-			self.add(TimeDistributed(Dense(output_dim)))
+		self.add(Dropout(dropout))
+		self.add(TimeDistributed(Dense(output_dim)))
 		self.encoder = encoder
 		self.decoder = decoder
 
