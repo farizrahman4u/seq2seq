@@ -34,7 +34,6 @@ class LSTMDecoder(StateTransferLSTM):
     input_ndim = 2
 
     def __init__(self, output_length, hidden_dim=None, **kwargs):
-
         self.output_length = output_length
         self.hidden_dim = hidden_dim
         input_dim = None
