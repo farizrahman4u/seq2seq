@@ -203,13 +203,13 @@ class AttentionSeq2seq(Sequential):
 			del kwargs['input_dim']
 		self.add(Layer(batch_input_shape=shape if depth[0] == 1 else shape[:2] + (hidden_dim,)))
 		if bidirectional:
-			self.add(Bidirectional(LSTMEncoder(output_dim=hidden_dim / 2, state_input=False, return_sequences=True, **kwargs)))
+			self.add(Bidirectional(LSTMEncoder(output_dim=int(hidden_dim / 2), state_input=False, return_sequences=True, **kwargs)))
 		else:
 			self.add(LSTMEncoder(output_dim=hidden_dim, state_input=False, return_sequences=True, **kwargs))
 		for i in range(0, depth[0] - 1):
 			self.add(Dropout(dropout))
 			if bidirectional:
-				self.add(Bidirectional(LSTMEncoder(output_dim=hidden_dim / 2, state_input=False, return_sequences=True, **kwargs)))
+				self.add(Bidirectional(LSTMEncoder(output_dim=int(hidden_dim / 2), state_input=False, return_sequences=True, **kwargs)))
 			else:
 				self.add(LSTMEncoder(output_dim=hidden_dim, state_input=False, return_sequences=True, **kwargs))
 		encoder = self.layers[-1]
