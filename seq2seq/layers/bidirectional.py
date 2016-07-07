@@ -68,7 +68,7 @@ class Bidirectional(Layer):
 
     def call(self, X, mask=None):
         def reverse(x):
-            if K.ndim == 2:
+            if K.ndim(x) == 2:
                 x = K.expand_dims(x, -1)
                 rev = K.permute_dimensions(x, (1, 0, 2))[::-1]
                 rev = K.squeeze(rev, -1)
