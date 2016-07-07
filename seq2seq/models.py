@@ -199,7 +199,11 @@ class AttentionSeq2seq(Sequential):
 			shape = (None,) + tuple(kwargs['input_shape'])
 			del kwargs['input_shape']
 		elif 'input_dim' in kwargs:
-			shape = (None, None, kwargs['input_dim'])
+			if 'input_length' in kwargs:
+				input_length = kwargs['input_length']
+			else:
+				input_length = None
+			shape = (None, input_length, kwargs['input_dim'])
 			del kwargs['input_dim']
 		self.add(Layer(batch_input_shape=shape if depth[0] == 1 else shape[:2] + (hidden_dim,)))
 		if bidirectional:
