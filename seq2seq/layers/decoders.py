@@ -113,7 +113,7 @@ class LSTMDecoder(StateTransferLSTM):
         else:
             initial_states = self.get_initial_states(X)
         constants = self.get_constants(X)
-        y_0 = K.permute_dimensions(X, (1, 0, 2))[0]
+        y_0 = K.permute_dimensions(X, (1, 0, 2))[0, :, :]
         initial_states += [y_0]
         last_output, outputs, states = K.rnn(self.step, X,
                                              initial_states,
@@ -266,7 +266,7 @@ class AttentionDecoder(LSTMDecoder2):
 
     def call(self, x, mask=None):
         H = x
-        x = K.permute_dimensions(H, (1, 0, 2))[-1]
+        x = K.permute_dimensions(H, (1, 0, 2))[-1, :, :]
         if self.stateful or self.state_input or len(self.state_outputs) > 0:
             initial_states = self.states[:]
         else:
