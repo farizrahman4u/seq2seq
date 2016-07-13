@@ -30,6 +30,8 @@ class Bidirectional(Layer):
 
         self.forward = rnn
         self.reverse = pickle.loads(pickle.dumps(rnn))
+        self.forward.name = 'forward_' + self.forward.name
+        self.reverse.name = 'reverse_' + self.reverse.name
         self.merge_mode = merge_mode
         if weights:
             nw = len(weights)
