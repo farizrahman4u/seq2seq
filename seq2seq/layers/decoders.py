@@ -62,8 +62,8 @@ class LSTMDecoder(StateTransferLSTM):
         super(LSTMDecoder, self).build(input_shape)
         self.output_dim = output_dim
         self.initial_weights = initial_weights
-        self.W_y = self.init((self.hidden_dim, self.output_dim))
-        self.b_y = K.zeros((self.output_dim))
+        self.W_y = self.init((self.hidden_dim, self.output_dim), name='{}_W_y'.format(self.name))
+        self.b_y = K.zeros((self.output_dim), name='{}_b_y'.format(self.name))
         self.trainable_weights += [self.W_y, self.b_y]
         if self.initial_weights is not None:
             self.set_weights(self.initial_weights)
@@ -168,8 +168,8 @@ class LSTMDecoder2(LSTMDecoder):
         super(LSTMDecoder2, self).build(input_shape)
         self.initial_weights = initial_weights
         dim = self.input_spec[0].shape[-1]
-        self.W_x = self.init((dim, dim))
-        self.b_x = K.zeros((dim,))
+        self.W_x = self.init((dim, dim), name='{}_W_x'.format(self.name))
+        self.b_x = K.zeros((dim,), name='{}_b_x'.format(self.name))
         self.trainable_weights += [self.W_x, self.b_x]
         if self.initial_weights is not None:
             self.set_weights(self.initial_weights)
@@ -241,10 +241,10 @@ class AttentionDecoder(LSTMDecoder2):
         self.initial_weights = initial_weights
         dim = self.input_dim
         hdim = self.hidden_dim
-        self.W_h = self.init((hdim, dim))
-        self.b_h = K.zeros((dim, ))
-        self.W_a = self.init((dim, 1))
-        self.b_a = K.zeros((1,))
+        self.W_h = self.init((hdim, dim), name='{}_W_h'.format(self.name))
+        self.b_h = K.zeros((dim, ), name='{}_b_h'.format(self.name))
+        self.W_a = self.init((dim, 1), name='{}_W_a'.format(self.name))
+        self.b_a = K.zeros((1,), name='{}_b_a'.format(self.name))
         self.trainable_weights += [self.W_a, self.b_a, self.W_h, self.b_h]
         if self.initial_weights is not None:
             self.set_weights(self.inital_weights)
