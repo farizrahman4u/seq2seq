@@ -205,7 +205,7 @@ class AttentionSeq2seq(Sequential):
 				input_length = None
 			shape = (None, input_length, kwargs['input_dim'])
 			del kwargs['input_dim']
-		self.add(Layer(batch_input_shape=shape if depth[0] == 1 else shape[:2] + (hidden_dim,)))
+		self.add(Layer(batch_input_shape=shape))
 		if bidirectional:
 			self.add(Bidirectional(LSTMEncoder(output_dim=int(hidden_dim / 2), state_input=False, return_sequences=True, **kwargs)))
 		else:
