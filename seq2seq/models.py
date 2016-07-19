@@ -147,7 +147,6 @@ class Seq2seq(Sequential):
 			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, return_sequences=True, **kwargs)
 			self.add(layer)
 			lstms += [layer]
-			self.add(Dropout(dropout))
 		if inner_broadcast_state:
 				for i in range(len(lstms) - 1):
 					lstms[i].broadcast_state(lstms[i + 1])
