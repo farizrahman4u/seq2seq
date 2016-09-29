@@ -63,7 +63,7 @@ class LSTMDecoder(StateTransferLSTM):
         self.output_dim = output_dim
         self.initial_weights = initial_weights
         self.W_y = self.init((self.hidden_dim, self.output_dim), name='{}_W_y'.format(self.name))
-        self.b_y = K.zeros((self.output_dim), name='{}_b_y'.format(self.name))
+        self.b_y = K.zeros((self.output_dim,), name='{}_b_y'.format(self.name))
         self.trainable_weights += [self.W_y, self.b_y]
         if self.initial_weights is not None:
             self.set_weights(self.initial_weights)
