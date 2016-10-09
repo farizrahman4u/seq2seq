@@ -1,7 +1,6 @@
 # Seq2seq
 Sequence to Sequence Learning with Keras
 
-* *(Latest version of Keras supported : 1.0.5)*
 
 
 **Hi!** You have just found Seq2seq. Seq2seq is a sequence to sequence learning add-on for the python deep learning library [Keras](http://www.keras.io). Using Seq2seq, you can build and train sequence-to-sequence neural network models in Keras. Such models are useful for machine translation, chatbots (see [[4]](http://arxiv.org/pdf/1506.05869v1.pdf)), parsers, or whatever that comes to your mind.
@@ -57,7 +56,7 @@ model = Seq2seq(batch_input_shape=(16, 7, 5), hidden_dim=10, output_length=8, ou
 model.compile(loss='mse', optimizer='rmsprop')
 ```
 
-Note that we had to specify the complete input shape, including the samples dimensions. This is because we need a static hidden state(similar to a stateful RNN) for transferring it across layers. By the way, Seq2seq models also support the `stateful` argument, in case you need it.
+Note that we had to specify the complete input shape, including the samples dimensions. This is because we need a static hidden state(similar to a stateful RNN) for transferring it across layers. (Update : Full input shape is not required in the latest version, since we switched to Recurrent Shop backend). By the way, Seq2seq models also support the `stateful` argument, in case you need it.
 
 You can also experiment with the hidden state propogation turned  off. Simply set the arguments `broadcast_state` and `inner_broadcast_state` to `False`.
 
