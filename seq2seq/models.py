@@ -1,15 +1,8 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import
-
-from seq2seq.layers.encoders import LSTMEncoder
-from seq2seq.layers.decoders import LSTMDecoder, LSTMDecoder2, AttentionDecoder
-from seq2seq.layers.bidirectional import Bidirectional
-from keras.layers.recurrent import LSTM
-from keras.layers.core import RepeatVector, Dense, TimeDistributedDense, Dropout, Activation
-from keras.layers.wrappers import TimeDistributed
-from keras.models import Sequential
-from keras.engine.topology import Layer
+from recurrentshop import LSTMCell, RecurrentContainer
+from .cells import LSTMDecoderCell, AttentionDecoderCell
+from keras.models import Sequential, Model
+from keras.layers import Dense, Dropout, TimeDistributed, Bidirectional, Input
 
 
 '''
@@ -20,11 +13,11 @@ Papers:
 '''
 
 
-class SimpleSeq2seq(Sequential):
+def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0.25, **kwargs):
 	'''
 	Simple model for sequence to sequence learning.
 	The encoder encodes the input sequence to vector (called context vector)
-	The decoder decoder the context vector in to a sequence of vectors.
+	The decoder decodes the context vector in to a sequence of vectors.
 	There is no one on one relation between the input and output sequence elements.
 	The input sequence and output sequence may differ in length.
 
@@ -41,25 +34,50 @@ class SimpleSeq2seq(Sequential):
 	dropout : Dropout probability in between layers.
 
 	'''
-	def __init__(self, output_dim, hidden_dim, output_length, depth=1, dropout=0.25, **kwargs):
-		super(SimpleSeq2seq, self).__init__()
-		if type(depth) not in [list, tuple]:
-			depth = (depth, depth)
-		self.encoder = LSTM(hidden_dim, **kwargs)
-		self.decoder = LSTM(hidden_dim, return_sequences=True, **kwargs)
-		for i in range(1, depth[0]):
-			self.add(LSTM(hidden_dim, return_sequences=True, **kwargs))
-			self.add(Dropout(dropout))
-		self.add(self.encoder)
-		self.add(Dropout(dropout))
-		self.add(RepeatVector(output_length))
-		self.add(self.decoder)
-		for i in range(1, depth[1]):
-			self.add(LSTM(hidden_dim, return_sequences=True, **kwargs))
-			self.add(Dropout(dropout))
-		self.add(TimeDistributed(Dense(output_dim)))
+	if type(depth) == int:
+		depth = [depth, depth]
+	if 'batch_input_shape' in kwargs:
+		shape = kwargs['batch_input_shape']
+		del kwargs['batch_input_shape']
+	elif 'input_shape' in kwargs:
+		shape = (None,) + tuple(kwargs['input_shape'])
+		del kwargs['input_shape']
+	elif 'input_dim' in kwargs:
+		if 'input_length' in kwargs:
+			shape = (None, kwargs['input_length'], kwargs['input_dim'])
+			del kwargs['input_length']
+		else:
+			shape = (None, None, kwargs['input_dim'])
+		del kwargs['input_dim']
+	if 'unroll' in kwargs:
+		unroll = kwargs['unroll']
+		del kwargs['unroll']
+	else:
+		unroll = False
+	if 'stateful' in kwargs:
+		stateful = kwargs['stateful']
+		del kwargs['stateful']
+	else:
+		stateful = False
+	if not hidden_dim:
+		hidden_dim = output_dim
+	encoder = RecurrentContainer(unroll=unroll, stateful=stateful, input_length=shape[1])
+	encoder.add(LSTMCell(hidden_dim, batch_input_shape=(shape[0], shape[2]), **kwargs))
+	for _ in range(1, depth[0]):
+		encoder.add(Dropout(dropout))
+		encoder.add(LSTMCell(hidden_dim, **kwargs))
+	decoder = RecurrentContainer(unroll=unroll, stateful=stateful, decode=True, output_length=output_length)
+	decoder.add(Dropout(dropout, batch_input_shape=(shape[0], hidden_dim)))
+	decoder.add(LSTMCell(hidden_dim, **kwargs))
+	for _ in range(1, depth[1]):
+		decoder.add(Dropout(dropout))
+		decoder.add(LSTMCell(hidden_dim, **kwargs))
+	model = Sequential()
+	model.add(encoder)
+	model.add(decoder)
+	return model
 
-class Seq2seq(Sequential):
+def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state=True, inner_broadcast_state=True, peek=False, dropout=0.1, **kwargs):
 	'''
 	Seq2seq model based on [1] and [2].
 	This model has the ability to transfer the encoder hidden state to the decoder's
@@ -111,55 +129,58 @@ class Seq2seq(Sequential):
 
 
 	'''
-	def __init__(self, output_dim, hidden_dim, output_length, depth=1, broadcast_state=True, inner_broadcast_state=True, peek=False, dropout=0.1, **kwargs):
-		super(Seq2seq, self).__init__()
-		if type(depth) not in [list, tuple]:
-			depth = (depth, depth)
-		if 'batch_input_shape' in kwargs:
-			shape = kwargs['batch_input_shape']
-			del kwargs['batch_input_shape']
-		elif 'input_shape' in kwargs:
-			shape = (None,) + tuple(kwargs['input_shape'])
-			del kwargs['input_shape']
-		elif 'input_dim' in kwargs:
+	if type(depth) == int:
+		depth = [depth, depth]
+	if 'batch_input_shape' in kwargs:
+		shape = kwargs['batch_input_shape']
+		del kwargs['batch_input_shape']
+	elif 'input_shape' in kwargs:
+		shape = (None,) + tuple(kwargs['input_shape'])
+		del kwargs['input_shape']
+	elif 'input_dim' in kwargs:
+		if 'input_length' in kwargs:
+			shape = (None, kwargs['input_length'], kwargs['input_dim'])
+			del kwargs['input_length']
+		else:
 			shape = (None, None, kwargs['input_dim'])
-			del kwargs['input_dim']
-		lstms = []
-		layer = LSTMEncoder(batch_input_shape=shape, output_dim=hidden_dim, state_input=False, return_sequences=depth[0] > 1, **kwargs)
-		self.add(layer)
-		lstms += [layer]
-		for i in range(depth[0] - 1):
-			self.add(Dropout(dropout))
-			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, return_sequences=i < depth[0] - 2, **kwargs)
-			self.add(layer)
-			lstms += [layer]
-		if inner_broadcast_state:
-			for i in range(len(lstms) - 1):
-				lstms[i].broadcast_state(lstms[i + 1])
-		encoder = self.layers[-1]
-		self.add(Dropout(dropout))
-		decoder_type = LSTMDecoder2 if peek else LSTMDecoder
-		decoder = decoder_type(hidden_dim=hidden_dim, output_length=output_length, state_input=broadcast_state, **kwargs)
-		self.add(decoder)
-		lstms = [decoder]
-		for i in range(depth[1] - 1):
-			self.add(Dropout(dropout))
-			layer = LSTMEncoder(output_dim=hidden_dim, state_input=inner_broadcast_state, return_sequences=True, **kwargs)
-			self.add(layer)
-			lstms += [layer]
-		if inner_broadcast_state:
-				for i in range(len(lstms) - 1):
-					lstms[i].broadcast_state(lstms[i + 1])
-		if broadcast_state:
-			encoder.broadcast_state(decoder)
-		self.add(Dropout(dropout))
-		self.add(TimeDistributed(Dense(output_dim)))
-		self.encoder = encoder
-		self.decoder = decoder
+		del kwargs['input_dim']
+	if 'unroll' in kwargs:
+		unroll = kwargs['unroll']
+		del kwargs['unroll']
+	else:
+		unroll = False
+	if 'stateful' in kwargs:
+		stateful = kwargs['stateful']
+		del kwargs['stateful']
+	else:
+		stateful = False
+	if not hidden_dim:
+		hidden_dim = output_dim
+	encoder = RecurrentContainer(readout=True, state_sync=inner_broadcast_state, input_length=shape[1], unroll=unroll, stateful=stateful)
+	for i in range(depth[0]):
+		encoder.add(LSTMCell(hidden_dim, batch_input_shape=(shape[0], hidden_dim), **kwargs))
+		encoder.add(Dropout(dropout))
+	dense1 = TimeDistributed(Dense(hidden_dim))
+	dense2 = Dense(output_dim)
+	decoder = RecurrentContainer(readout='add' if peek else 'readout_only', state_sync=inner_broadcast_state, output_length=output_length, unroll=unroll, stateful=stateful, decode=True)
+	for i in range(depth[1]):
+		decoder.add(Dropout(dropout, batch_input_shape=(shape[0], output_dim)))
+		decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim, batch_input_shape=(shape[0], output_dim), **kwargs))
+	input = Input(batch_shape=shape)
+	encoded_seq = dense1(input)
+	encoded_seq = encoder(encoded_seq)
+	if broadcast_state:
+		decoder.model.layers[1].states[:2] = encoder.state_outputs[-3:-1]
+	encoded_seq = dense2(encoded_seq)
+	decoder.initial_readout = encoded_seq
+	decoded_seq = decoder(encoded_seq)
+	model = Model(input, decoded_seq)
+	model.encoder = encoder
+	model.decoder = decoder
+	return model
 
 
-class AttentionSeq2seq(Sequential):
-
+def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidirectional=True, dropout=0.1, **kwargs):
 	'''
 	This is an attention Seq2seq model based on [3].
 	Here, there is a soft allignment between the input and output sequence elements.
@@ -185,80 +206,49 @@ class AttentionSeq2seq(Sequential):
         Where a is a feed forward network.
 
 	'''
-	def __init__(self, output_dim, hidden_dim, output_length, depth=1,bidirectional=True, dropout=0.1, **kwargs):
-		if bidirectional and hidden_dim % 2 != 0:
-			raise Exception ("hidden_dim for AttentionSeq2seq should be even (Because of bidirectional RNN).")
-		super(AttentionSeq2seq, self).__init__()
-		if type(depth) not in [list, tuple]:
-			depth = (depth, depth)
-		if 'batch_input_shape' in kwargs:
-			shape = kwargs['batch_input_shape']
-			del kwargs['batch_input_shape']
-		elif 'input_shape' in kwargs:
-			shape = (None,) + tuple(kwargs['input_shape'])
-			del kwargs['input_shape']
-		elif 'input_dim' in kwargs:
-			if 'input_length' in kwargs:
-				input_length = kwargs['input_length']
-			else:
-				input_length = None
-			shape = (None, input_length, kwargs['input_dim'])
-			del kwargs['input_dim']
-		self.add(Layer(batch_input_shape=shape))
-		if bidirectional:
-			self.add(Bidirectional(LSTMEncoder(output_dim=int(hidden_dim / 2), state_input=False, return_sequences=True, **kwargs)))
-		else:
-			self.add(LSTMEncoder(output_dim=hidden_dim, state_input=False, return_sequences=True, **kwargs))
-		for i in range(0, depth[0] - 1):
-			self.add(Dropout(dropout))
-			if bidirectional:
-				self.add(Bidirectional(LSTMEncoder(output_dim=int(hidden_dim / 2), state_input=False, return_sequences=True, **kwargs)))
-			else:
-				self.add(LSTMEncoder(output_dim=hidden_dim, state_input=False, return_sequences=True, **kwargs))
-		encoder = self.layers[-1]
-		self.add(Dropout(dropout))
-		self.add(TimeDistributed(Dense(hidden_dim if depth[1] > 1 else output_dim)))
-		decoder = AttentionDecoder(hidden_dim=hidden_dim, output_length=output_length, state_input=False, **kwargs)
-		self.add(Dropout(dropout))
-		self.add(decoder)
-		for i in range(0, depth[1] - 1):
-			self.add(Dropout(dropout))
-			self.add(LSTMEncoder(output_dim=hidden_dim, state_input=False, return_sequences=True, **kwargs))
-		self.add(Dropout(dropout))
-		self.add(TimeDistributed(Dense(output_dim)))
-		self.encoder = encoder
-		self.decoder = decoder
-
-
-class IndexShuffle(SimpleSeq2seq):
-	'''
-	This model is used for shuffling(re-ordering) the timesteps in 3D data.
-	It outputs the shuffled indices of the timesteps.
-
-	'''
-	def __init__(self, **kwargs):
-		length = None
+	if type(depth) == int:
+		depth = [depth, depth]
+	if 'batch_input_shape' in kwargs:
+		shape = kwargs['batch_input_shape']
+		del kwargs['batch_input_shape']
+	elif 'input_shape' in kwargs:
+		shape = (None,) + tuple(kwargs['input_shape'])
+		del kwargs['input_shape']
+	elif 'input_dim' in kwargs:
 		if 'input_length' in kwargs:
-			length = kwargs['input_length']
-		if 'input_shape' in kwargs:
-			length = kwargs['input_shape'][-2]
-		elif 'batch_input_shape' in kwargs:
-			length = kwargs['batch_input_shape'][-2]
-		if 'hidden_dim' not in kwargs:
-			kwargs['hidden_dim'] = length
-		super(IndexShuffle, self).__init__(output_dim=length, output_length=length, **kwargs)
-		self.add(Activation('softmax'))
-
-class SoftShuffle(IndexShuffle):
-	'''
-	Suffles the timesteps of 3D input. Can also mixup information across timesteps.
-
-	'''
-	def call(self, x, mask=None):
-		import theano.tensor as T
-		indices = super(SoftShuffle, self)(x, mask)
-		Y = T.batched_tensordot(indices, x,axes=[(1), (1)])
-		return Y
-
-	def get_output_shape_for(self, input_shape):
-	    return input_shape
+			shape = (None, kwargs['input_length'], kwargs['input_dim'])
+			del kwargs['input_length']
+		else:
+			shape = (None, None, kwargs['input_dim'])
+		del kwargs['input_dim']
+	if 'unroll' in kwargs:
+		unroll = kwargs['unroll']
+		del kwargs['unroll']
+	else:
+		unroll = False
+	if 'stateful' in kwargs:
+		stateful = kwargs['stateful']
+		del kwargs['stateful']
+	else:
+		stateful = False
+	if not hidden_dim:
+		hidden_dim = output_dim
+	encoder = RecurrentContainer(unroll=unroll, stateful=stateful, return_sequences=True, input_length=shape[1])
+	encoder.add(LSTMCell(hidden_dim, batch_input_shape=(shape[0], shape[2]), **kwargs))
+	for _ in range(1, depth[0]):
+		encoder.add(Dropout(dropout))
+		encoder.add(LSTMCell(hidden_dim, **kwargs))
+	input = Input(batch_shape=shape)
+	if bidirectional:
+		encoder = Bidirectional(encoder, merge_mode='sum')
+	encoded = encoder(input)
+	decoded = encoded
+	for _ in range(1, depth[1]):
+		decoder = AttentionDecoderCell(output_dim=hidden_dim, hidden_dim=hidden_dim, batch_input_shape=(shape[0], shape[1], hidden_dim)).get_layer(decode=True, output_length=output_length, unroll=unroll, stateful=stateful)
+		decoded = Dropout(dropout)(decoded)
+		decoded = decoder(decoded)
+	decoder = AttentionDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim, batch_input_shape=(shape[0], output_length if depth[1] > 1 else shape[1], hidden_dim)).get_layer(decode=True, output_length=output_length, unroll=unroll, stateful=stateful)
+	decoded = Dropout(dropout)(decoded)
+	decoded = decoder(decoded)
+	model = Model(input, decoded)
+	return model
