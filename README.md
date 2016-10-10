@@ -104,8 +104,8 @@ That's all for now. Hope you love this library. For any questions you might have
 
 **Requirements:**
 
-* [Recurrent Shop](https://www.github.com/farizrahman4u/recurrentshop)
 * [Keras](https://keras.io)
+* [Recurrent Shop](https://www.github.com/farizrahman4u/recurrentshop)
 
 
 **Working Example:**
