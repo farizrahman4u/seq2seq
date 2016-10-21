@@ -13,12 +13,12 @@ class LSTMDecoderCell(LSTMCell):
 
 	def build(self, input_shape):
 		input_dim = input_shape[-1]
-		W1 = weight((input_dim, 4 * self.hidden_dim,), init=self.init, regularizer=self.W_regularizer)
-		W2 = weight((self.hidden_dim, self.output_dim), init=self.init, regularizer=self.W_regularizer)
-		U = weight((self.hidden_dim, 4 * self.hidden_dim,), init=self.inner_init, regularizer=self.U_regularizer)
+		W1 = weight((input_dim, 4 * self.hidden_dim,), init=self.init, regularizer=self.W_regularizer, name='{}_W1'.format(self.name))
+		W2 = weight((self.hidden_dim, self.output_dim), init=self.init, regularizer=self.W_regularizer, name='{}_W2'.format(self.name))
+		U = weight((self.hidden_dim, 4 * self.hidden_dim,), init=self.inner_init, regularizer=self.U_regularizer, name='{}_U'.format(self.name))
 		b1 = np.concatenate([np.zeros(self.hidden_dim), K.get_value(self.forget_bias_init((self.hidden_dim,))), np.zeros(2 * self.hidden_dim)])
-		b1 = weight(b1, regularizer=self.b_regularizer)
-		b2 = weight((self.output_dim,), init='zero', regularizer=self.b_regularizer)
+		b1 = weight(b1, regularizer=self.b_regularizer, name='{}_b1'.format(self.name))
+		b2 = weight((self.output_dim,), init='zero', regularizer=self.b_regularizer, name='{}_b2'.format(self.name))
 		h = (-1, self.hidden_dim)
 		c = (-1, self.hidden_dim)
 
@@ -60,14 +60,14 @@ class AttentionDecoderCell(LSTMCell):
 	def build(self, input_shape):
 		input_dim = input_shape[-1]
 		input_length = input_shape[1]
-		W1 = weight((input_dim, 4 * self.hidden_dim,), init=self.init, regularizer=self.W_regularizer)
-		W2 = weight((self.hidden_dim, self.output_dim), init=self.init, regularizer=self.W_regularizer)
-		W3 = weight((self.hidden_dim + input_dim, 1), init=self.init, regularizer=self.W_regularizer)
-		U = weight((self.hidden_dim, 4 * self.hidden_dim,), init=self.inner_init, regularizer=self.U_regularizer)
+		W1 = weight((input_dim, 4 * self.hidden_dim,), init=self.init, regularizer=self.W_regularizer, name='{}_W1'.format(self.name))
+		W2 = weight((self.hidden_dim, self.output_dim), init=self.init, regularizer=self.W_regularizer, name='{}_W2'.format(self.name))
+		W3 = weight((self.hidden_dim + input_dim, 1), init=self.init, regularizer=self.W_regularizer, name='{}_W3'.format(self.name))
+		U = weight((self.hidden_dim, 4 * self.hidden_dim,), init=self.inner_init, regularizer=self.U_regularizer, name='{}_U'.format(self.name))
 		b1 = np.concatenate([np.zeros(self.hidden_dim), K.get_value(self.forget_bias_init((self.hidden_dim,))), np.zeros(2 * self.hidden_dim)])
-		b1 = weight(b1, regularizer=self.b_regularizer)
-		b2 = weight((self.output_dim,), init='zero', regularizer=self.b_regularizer)
-		b3 = weight((1,), init='zero', regularizer=self.b_regularizer)
+		b1 = weight(b1, regularizer=self.b_regularizer, name='{}_b1'.format(self.name))
+		b2 = weight((self.output_dim,), init='zero', regularizer=self.b_regularizer, name='{}_b2'.format(self.name))
+		b3 = weight((1,), init='zero', regularizer=self.b_regularizer, name='{}_b3'.format(self.name))
 		h = (-1, self.hidden_dim)
 		c = (-1, self.hidden_dim)
 		def step(x, states, weights):
