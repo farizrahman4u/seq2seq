@@ -1,2 +1,2 @@
-from cells import *
-from models import *
+from .cells import *
+from .models import *
