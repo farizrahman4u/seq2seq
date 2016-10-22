@@ -66,7 +66,7 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0
 	for _ in range(1, depth[0]):
 		encoder.add(Dropout(dropout))
 		encoder.add(LSTMCell(hidden_dim, **kwargs))
-	decoder = RecurrentContainer(unroll=unroll, stateful=stateful, decode=True, output_length=output_length)
+	decoder = RecurrentContainer(unroll=unroll, stateful=stateful, decode=True, output_length=output_length, input_length=shape[1])
 	decoder.add(Dropout(dropout, batch_input_shape=(shape[0], hidden_dim)))
 	decoder.add(LSTMCell(hidden_dim, **kwargs))
 	for _ in range(1, depth[1]):
@@ -162,7 +162,7 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
 		encoder.add(Dropout(dropout))
 	dense1 = TimeDistributed(Dense(hidden_dim))
 	dense2 = Dense(output_dim)
-	decoder = RecurrentContainer(readout='add' if peek else 'readout_only', state_sync=inner_broadcast_state, output_length=output_length, unroll=unroll, stateful=stateful, decode=True)
+	decoder = RecurrentContainer(readout='add' if peek else 'readout_only', state_sync=inner_broadcast_state, output_length=output_length, unroll=unroll, stateful=stateful, decode=True, input_length=shape[1])
 	for i in range(depth[1]):
 		decoder.add(Dropout(dropout, batch_input_shape=(shape[0], output_dim)))
 		decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim, batch_input_shape=(shape[0], output_dim), **kwargs))
