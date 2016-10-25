@@ -242,13 +242,18 @@ def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidire
 	if bidirectional:
 		encoder = Bidirectional(encoder, merge_mode='sum')
 	encoded = encoder(input)
-	decoded = encoded
-	for _ in range(1, depth[1]):
-		decoder = AttentionDecoderCell(output_dim=hidden_dim, hidden_dim=hidden_dim, batch_input_shape=(shape[0], shape[1], hidden_dim)).get_layer(decode=True, output_length=output_length, unroll=unroll, stateful=stateful)
-		decoded = Dropout(dropout)(decoded)
-		decoded = decoder(decoded)
-	decoder = AttentionDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim, batch_input_shape=(shape[0], output_length if depth[1] > 1 else shape[1], hidden_dim)).get_layer(decode=True, output_length=output_length, unroll=unroll, stateful=stateful)
-	decoded = Dropout(dropout)(decoded)
-	decoded = decoder(decoded)
+
+	decoder = RecurrentContainer(decode=True, output_length=output_length, unroll=unroll, stateful=stateful, input_length=shape[1])
+	decoder.add(Dropout(dropout, batch_input_shape=(shape[0], shape[1], hidden_dim)))
+	if depth[1] == 1:
+		decoder.add(AttentionDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
+	else:
+		decoder.add(AttentionDecoderCell(output_dim=hidden_dim, hidden_dim=hidden_dim))
+		for _ in range(depth[1] - 2):
+			decoder.add(Dropout(dropout))
+			decoder.add(LSTMDecoderCell(output_dim=hidden_dim, hidden_dim=hidden_dim))
+		decoder.add(Dropout(dropout))
+		decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
+	decoded = decoder(encoded)
 	model = Model(input, decoded)
 	return model

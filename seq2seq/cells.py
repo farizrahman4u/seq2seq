@@ -70,6 +70,7 @@ class AttentionDecoderCell(LSTMCell):
 		b3 = weight((1,), init='zero', regularizer=self.b_regularizer, name='{}_b3'.format(self.name))
 		h = (-1, self.hidden_dim)
 		c = (-1, self.hidden_dim)
+
 		def step(x, states, weights):
 			H = x
 			h_tm1, c_tm1 = states
