@@ -77,7 +77,7 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0
 	model.add(decoder)
 	return model
 
-def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state=True, inner_broadcast_state=True, peek=False, dropout=0., **kwargs):
+def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state=True, inner_broadcast_state=True, teacher_force=False, peek=False, dropout=0., **kwargs):
 	'''
 	Seq2seq model based on [1] and [2].
 	This model has the ability to transfer the encoder hidden state to the decoder's
@@ -170,17 +170,22 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
 	encoded_seq = dense1(input)
 	encoded_seq = encoder(encoded_seq)
 	if broadcast_state:
-		decoder.model.layers[1].states[:2] = encoder.state_outputs[-3:-1]
+		decoder.model.layers[1].states[:2] = encoder.state_outputs[-2:]
 	encoded_seq = dense2(encoded_seq)
 	decoder.initial_readout = encoded_seq
+	inputs = [input]
+	if teacher_force:
+		truth_tensor = Input(batch_shape=(shape[0], output_length, output_dim))
+		decoder.set_truth_tensor(truth_tensor)
+		inputs += [truth_tensor]
 	decoded_seq = decoder(encoded_seq)
-	model = Model(input, decoded_seq)
+	model = Model(inputs, decoded_seq)
 	model.encoder = encoder
 	model.decoder = decoder
 	return model
 
 
-def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidirectional=True, dropout=0., **kwargs):
+def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidirectional=True, teacher_force=True, dropout=0., **kwargs):
 	'''
 	This is an attention Seq2seq model based on [3].
 	Here, there is a soft allignment between the input and output sequence elements.
@@ -254,6 +259,11 @@ def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidire
 			decoder.add(LSTMDecoderCell(output_dim=hidden_dim, hidden_dim=hidden_dim))
 		decoder.add(Dropout(dropout))
 		decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
+	inputs = [input]
+	if teacher_force:
+		truth_tensor = Input(batch_shape=(shape[0], output_length, output_dim))
+		inputs += [truth_tensor]
+		decoder.set_truth_tensor(truth_tensor)
 	decoded = decoder(encoded)
-	model = Model(input, decoded)
+	model = Model(inputs, decoded)
 	return model
