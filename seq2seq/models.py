@@ -185,7 +185,7 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
 	return model
 
 
-def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidirectional=True, teacher_force=True, dropout=0., **kwargs):
+def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidirectional=True, dropout=0., **kwargs):
 	'''
 	This is an attention Seq2seq model based on [3].
 	Here, there is a soft allignment between the input and output sequence elements.
@@ -260,10 +260,12 @@ def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidire
 		decoder.add(Dropout(dropout))
 		decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
 	inputs = [input]
+        '''
 	if teacher_force:
 		truth_tensor = Input(batch_shape=(shape[0], output_length, output_dim))
 		inputs += [truth_tensor]
 		decoder.set_truth_tensor(truth_tensor)
+        '''
 	decoded = decoder(encoded)
 	model = Model(inputs, decoded)
 	return model
