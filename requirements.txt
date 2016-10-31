@@ -1,3 +1,0 @@
-keras==1.1.0
-https://github.com/datalogai/recurrentshop/archive/6f709f1aabd5156b184a06852b8edb9ceee5bb21.zip
-numpy>=1.8.0
