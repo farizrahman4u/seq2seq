@@ -17,5 +17,5 @@ setup(
       license='GNU GPL v2',
       install_requires=install_requires,
       packages=find_packages(),
-      dependency_links = ['git+git://github.com/datalogai/recurrentshop.git']
+      dependency_links=['git+git://github.com/datalogai/recurrentshop.git']
 )
