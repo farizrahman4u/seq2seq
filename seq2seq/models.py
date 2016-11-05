@@ -179,7 +179,7 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
 	if teacher_force:
 		truth_tensor = Input(batch_shape=(shape[0], output_length, output_dim))
 		inputs += [truth_tensor]
-	decoded_seq = decoder({'input': encoded_seq, 'initial_readout': encoded_seq, 'states': states})
+	decoded_seq = decoder({'input': encoded_seq, 'ground_truth': inputs[1] if broadcast_state else None, 'initial_readout': encoded_seq, 'states': states})
 	model = Model(inputs, decoded_seq)
 	model.encoder = encoder
 	model.decoder = decoder
