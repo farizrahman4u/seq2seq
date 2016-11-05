@@ -4,10 +4,10 @@ from keras.utils.test_utils import keras_test
 
 
 input_length = 10
-input_dim = 5
+input_dim = 2
 
 output_length = 8
-output_dim = 7
+output_dim = 3
 
 samples = 100
 

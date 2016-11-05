@@ -156,7 +156,7 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
 		stateful = False
 	if not hidden_dim:
 		hidden_dim = output_dim
-	encoder = RecurrentContainer(readout=True, state_sync=inner_broadcast_state, input_length=shape[1], unroll=unroll, stateful=stateful)
+	encoder = RecurrentContainer(readout=True, state_sync=inner_broadcast_state, input_length=shape[1], unroll=unroll, stateful=stateful, return_states=broadcast_state)
 	for i in range(depth[0]):
 		encoder.add(LSTMCell(hidden_dim, batch_input_shape=(shape[0], hidden_dim), **kwargs))
 		encoder.add(Dropout(dropout))
@@ -170,15 +170,16 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
 	encoded_seq = dense1(input)
 	encoded_seq = encoder(encoded_seq)
 	if broadcast_state:
-		decoder.model.layers[1].states[:2] = encoder.state_outputs[-2:]
+		states = encoded_seq[-2:]
+		encoded_seq = encoded_seq[0]
+	else:
+		states = [None] * 2
 	encoded_seq = dense2(encoded_seq)
-	decoder.initial_readout = encoded_seq
 	inputs = [input]
 	if teacher_force:
 		truth_tensor = Input(batch_shape=(shape[0], output_length, output_dim))
-		decoder.set_truth_tensor(truth_tensor)
 		inputs += [truth_tensor]
-	decoded_seq = decoder(encoded_seq)
+	decoded_seq = decoder({'input': encoded_seq, 'initial_readout': encoded_seq, 'states': states})
 	model = Model(inputs, decoded_seq)
 	model.encoder = encoder
 	model.decoder = decoder
@@ -260,12 +261,12 @@ def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidire
 		decoder.add(Dropout(dropout))
 		decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
 	inputs = [input]
-        '''
+	'''
 	if teacher_force:
 		truth_tensor = Input(batch_shape=(shape[0], output_length, output_dim))
 		inputs += [truth_tensor]
 		decoder.set_truth_tensor(truth_tensor)
-        '''
+	'''
 	decoded = decoder(encoded)
 	model = Model(inputs, decoded)
 	return model
