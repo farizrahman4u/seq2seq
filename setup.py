@@ -2,8 +2,8 @@ from setuptools import setup
 from setuptools import find_packages
 
 install_requires = [
-    'Theano',
-    'Keras'
+    'Keras',
+    'recurrentshop'
 ]
 
 setup(
@@ -15,5 +15,6 @@ setup(
       url='https://github.com/farizrahman4u/seq2seq',
       license='GNU GPL v2',
       install_requires=install_requires,
-      packages=find_packages()
+      packages=find_packages(),
+      dependency_links=['git+git://github.com/datalogai/recurrentshop.git']
 )
