@@ -260,12 +260,12 @@ def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidire
 		decoder.add(Dropout(dropout))
 		decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
 	inputs = [input]
-        '''
+	'''
 	if teacher_force:
 		truth_tensor = Input(batch_shape=(shape[0], output_length, output_dim))
 		inputs += [truth_tensor]
 		decoder.set_truth_tensor(truth_tensor)
-        '''
+	'''
 	decoded = decoder(encoded)
 	model = Model(inputs, decoded)
 	return model
