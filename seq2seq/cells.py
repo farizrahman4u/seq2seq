@@ -107,5 +107,5 @@ class AttentionDecoderCell(LSTMCell):
 
 	def get_config(self):
 		config = {'hidden_dim': self.hidden_dim}
-		base_config = super(LSTMDecoderCell, self).get_config()
+		base_config = super(AttentionDecoderCell, self).get_config()
 		return dict(list(base_config.items()) + list(config.items()))
