@@ -68,14 +68,23 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0
 		encoder.add(LSTMCell(hidden_dim, **kwargs))
 	decoder = RecurrentContainer(unroll=unroll, stateful=stateful, decode=True, output_length=output_length, input_length=shape[1])
 	decoder.add(Dropout(dropout, batch_input_shape=(shape[0], hidden_dim)))
-	decoder.add(LSTMCell(hidden_dim, **kwargs))
-	for _ in range(1, depth[1]):
-		decoder.add(Dropout(dropout))
+
+	if depth[1] == 1:
+		decoder.add(LSTMCell(output_dim, **kwargs))
+	else:
 		decoder.add(LSTMCell(hidden_dim, **kwargs))
+		for _ in range(depth[1] - 2):
+			decoder.add(Dropout(dropout))
+			decoder.add(LSTMCell(hidden_dim, **kwargs))
+
+		decoder.add(Dropout(dropout))
+		decoder.add(LSTMCell(output_dim, **kwargs))
+
 	model = Sequential()
 	model.add(encoder)
 	model.add(decoder)
 	return model
+
 
 def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state=True, inner_broadcast_state=True, teacher_force=False, peek=False, dropout=0., **kwargs):
 	'''
