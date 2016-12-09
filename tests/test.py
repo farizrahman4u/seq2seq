@@ -39,6 +39,11 @@ def test_Seq2Seq():
 		model.compile(loss='mse', optimizer='sgd')
 		model.fit(x, y, nb_epoch=1)
 
+	model = Seq2Seq(output_dim=output_dim, output_length=output_length, input_shape=(input_length, input_dim), peek=True, depth=2, teacher_force=True)
+	model.compile(loss='mse', optimizer='sgd')
+	model.fit([x, y], y, nb_epoch=1)
+	
+
 @keras_test
 def test_AttentionSeq2Seq():
 	x = np.random.random((samples, input_length, input_dim))
