@@ -1,5 +1,6 @@
 import recurrentshop
-from recurrentshop.cells import ExtendedRNNCell
+from recurrentshop.cells import *
+from keras.models import Model
 from keras.layers import Input, Dense, Lambda, Activation
 from keras.layers import add, multiply, concatenate
 from keras import backend as K
@@ -9,7 +10,7 @@ class LSTMDecoderCell(ExtendedRNNCell):
 
     def __init__(self, hidden_dim=None, **kwargs):
         if not hidden_dim:
-            self.hidden_dim = kwargs['units ']
+            self.hidden_dim = kwargs['units']
         self.hidden_dim = hidden_dim
         super(ExtendedRNNCell, self).__init__(**kwargs)
 
