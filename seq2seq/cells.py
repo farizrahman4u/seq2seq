@@ -9,7 +9,7 @@ class LSTMDecoderCell(ExtendedRNNCell):
 
     def __init__(self, hidden_dim=None, **kwargs):
         if not hidden_dim:
-            self.hidden_dim = kwargs['output_dim']
+            self.hidden_dim = kwargs['units ']
         self.hidden_dim = hidden_dim
         super(ExtendedRNNCell, self).__init__(**kwargs)
 
@@ -49,7 +49,7 @@ class AttentionDecoderCell(ExtendedRNNCell):
 
     def __init__(self, hidden_dim=None, **kwargs):
         if not hidden_dim:
-            self.hidden_dim = kwargs['output_dim']
+            self.hidden_dim = kwargs['units']
         self.hidden_dim = hidden_dim
         super(AttentionDecoderCell, self).__init__(**kwargs)
 
