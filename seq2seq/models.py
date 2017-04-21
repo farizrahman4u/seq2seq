@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from recurrentshop import LSTMCell, RecurrentContainer
+from recurrentshop import LSTMCell, RecurrentSequential
 from .cells import LSTMDecoderCell, AttentionDecoderCell
 from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, TimeDistributed, Bidirectional, Input
@@ -61,15 +61,15 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0
         stateful = False
     if not hidden_dim:
         hidden_dim = output_dim
-    encoder = RecurrentContainer(
-        unroll=unroll, stateful=stateful, input_length=shape[1])
+    encoder = RecurrentSequential(
+        unroll=unroll, stateful=stateful, batch_input_shape=shape)
     encoder.add(LSTMCell(hidden_dim, batch_input_shape=(
         shape[0], shape[2]), **kwargs))
     for _ in range(1, depth[0]):
         encoder.add(Dropout(dropout))
         encoder.add(LSTMCell(hidden_dim, **kwargs))
-    decoder = RecurrentContainer(unroll=unroll, stateful=stateful,
-                                 decode=True, output_length=output_length, input_length=shape[1])
+    decoder = RecurrentSequential(unroll=unroll, stateful=stateful,
+                                 decode=True, output_length=output_length, batch_input_shape=shape)
     decoder.add(Dropout(dropout, batch_input_shape=(shape[0], hidden_dim)))
 
     if depth[1] == 1:
@@ -168,8 +168,8 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
         stateful = False
     if not hidden_dim:
         hidden_dim = output_dim
-    encoder = RecurrentContainer(readout=True, state_sync=inner_broadcast_state,
-                                 input_length=shape[1], unroll=unroll, stateful=stateful, return_states=broadcast_state)
+    encoder = RecurrentSequential(readout=True, state_sync=inner_broadcast_state,
+                                 batch_input_shape=shape, unroll=unroll, stateful=stateful, return_states=broadcast_state)
     for i in range(depth[0]):
         encoder.add(LSTMCell(hidden_dim, batch_input_shape=(
             shape[0], hidden_dim), **kwargs))
@@ -177,8 +177,8 @@ def Seq2Seq(output_dim, output_length, hidden_dim=None, depth=1, broadcast_state
     dense1 = TimeDistributed(Dense(hidden_dim))
     dense1.supports_masking = True
     dense2 = Dense(output_dim)
-    decoder = RecurrentContainer(readout='add' if peek else 'readout_only', state_sync=inner_broadcast_state,
-                                 output_length=output_length, unroll=unroll, stateful=stateful, decode=True, input_length=shape[1])
+    decoder = RecurrentSequential(readout='add' if peek else 'readout_only', state_sync=inner_broadcast_state,
+                                 output_length=output_length, unroll=unroll, stateful=stateful, decode=True, batch_input_shape=shape)
     for i in range(depth[1]):
         decoder.add(Dropout(dropout, batch_input_shape=(shape[0], output_dim)))
         decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim,
@@ -259,8 +259,8 @@ def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidire
         stateful = False
     if not hidden_dim:
         hidden_dim = output_dim
-    encoder = RecurrentContainer(
-        unroll=unroll, stateful=stateful, return_sequences=True, input_length=shape[1])
+    encoder = RecurrentSequential(
+        unroll=unroll, stateful=stateful, return_sequences=True, batch_input_shape=shape)
     encoder.add(LSTMCell(hidden_dim, batch_input_shape=(
         shape[0], shape[2]), **kwargs))
     for _ in range(1, depth[0]):
@@ -272,8 +272,8 @@ def AttentionSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, bidire
         encoder = Bidirectional(encoder, merge_mode='sum')
     encoded = encoder(input)
 
-    decoder = RecurrentContainer(decode=True, output_length=output_length,
-                                 unroll=unroll, stateful=stateful, input_length=shape[1])
+    decoder = RecurrentSequential(decode=True, output_length=output_length,
+                                 unroll=unroll, stateful=stateful, batch_input_shape=shape)
     decoder.add(Dropout(dropout, batch_input_shape=(
         shape[0], shape[1], hidden_dim)))
     if depth[1] == 1:

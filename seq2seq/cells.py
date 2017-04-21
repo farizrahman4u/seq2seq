@@ -12,7 +12,7 @@ class LSTMDecoderCell(ExtendedRNNCell):
         if not hidden_dim:
             self.hidden_dim = kwargs['units']
         self.hidden_dim = hidden_dim
-        super(ExtendedRNNCell, self).__init__(**kwargs)
+        super(LSTMDecoderCell, self).__init__(**kwargs)
 
     def build_model(self, input_shape):
         hidden_dim = self.hidden_dim
