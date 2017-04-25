@@ -36,12 +36,12 @@ class LSTMDecoderCell(ExtendedRNNCell):
 
         z = add([W1(x), U(h_tm1)])
         z0, z1, z2, z3 = get_slices(z, 4)
-        i = self.recurrent_activation(z0)
-        f = self.recurrent_activation(z1)
-        c = add([multiply([f, c_tm1]), multiply([i, self.activation(z2)])])
-        o = self.recurrent_activation(z3)
-        h = multiply([o, self.activation(c)])
-        y = self.activation(W2(h))
+        i = Activation(self.recurrent_activation)(z0)
+        f = Activation(self.recurrent_activation)(z1)
+        c = add([multiply([f, c_tm1]), multiply([i, Activation(self.activation)(z2)])])
+        o = Activation(self.recurrent_activation)(z3)
+        h = multiply([o, Activation(self.activation)(c)])
+        y = Activation(self.activation)(W2(h))
 
         return Model([x, h_tm1, c_tm1], [y, h, c])
 
