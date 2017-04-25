@@ -1,8 +1,8 @@
 from __future__ import absolute_import
-from recurrentshop import LSTMCell, RecurrentContainer
+from recurrentshop import LSTMCell, RecurrentContainer, RecurrentSequential
 from .cells import LSTMDecoderCell, AttentionDecoderCell
 from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, TimeDistributed, Bidirectional, Input
+from keras.layers import Dense, Dropout, TimeDistributed, Bidirectional, Input, InputLayer
 
 
 '''
@@ -49,6 +49,8 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0
         else:
             shape = (None, None, kwargs['input_dim'])
         del kwargs['input_dim']
+    else:
+        raise RuntimeError('The input shape cannot be determined.')
     if 'unroll' in kwargs:
         unroll = kwargs['unroll']
         del kwargs['unroll']
@@ -61,21 +63,21 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0
         stateful = False
     if not hidden_dim:
         hidden_dim = output_dim
-    encoder = RecurrentContainer(
-        unroll=unroll, stateful=stateful, input_length=shape[1])
+    inp = InputLayer(batch_input_shape=shape)
+    encoder = RecurrentSequential(
+        unroll=unroll, stateful=stateful)
     encoder.add(LSTMCell(hidden_dim, batch_input_shape=(
         shape[0], shape[2]), **kwargs))
     for _ in range(1, depth[0]):
         encoder.add(Dropout(dropout))
         encoder.add(LSTMCell(hidden_dim, **kwargs))
-    decoder = RecurrentContainer(unroll=unroll, stateful=stateful,
-                                 decode=True, output_length=output_length, input_length=shape[1])
-    decoder.add(Dropout(dropout, batch_input_shape=(shape[0], hidden_dim)))
 
+    decoder = RecurrentSequential(unroll=unroll, stateful=stateful,
+                                  decode=True, output_length=output_length)
     if depth[1] == 1:
-        decoder.add(LSTMCell(output_dim, **kwargs))
+        decoder.add(LSTMCell(output_dim, batch_input_shape=(shape[0], hidden_dim), **kwargs))
     else:
-        decoder.add(LSTMCell(hidden_dim, **kwargs))
+        decoder.add(LSTMCell(hidden_dim, batch_input_shape=(shape[0], hidden_dim), **kwargs))
         for _ in range(depth[1] - 2):
             decoder.add(Dropout(dropout))
             decoder.add(LSTMCell(hidden_dim, **kwargs))
@@ -84,7 +86,9 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, depth=1, dropout=0
         decoder.add(LSTMCell(output_dim, **kwargs))
 
     model = Sequential()
+    model.add(inp)
     model.add(encoder)
+    model.add(Dropout(dropout))
     model.add(decoder)
     return model
 
