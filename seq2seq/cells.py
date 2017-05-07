@@ -9,10 +9,12 @@ from keras import backend as K
 class LSTMDecoderCell(ExtendedRNNCell):
 
     def __init__(self, hidden_dim=None, **kwargs):
-        if not hidden_dim:
+        if hidden_dim:
+            self.hidden_dim = hidden_dim
+            kwargs['units'] = hidden_dim
+        else:
             self.hidden_dim = kwargs['units']
-        self.hidden_dim = hidden_dim
-        super(ExtendedRNNCell, self).__init__(**kwargs)
+        super(LSTMDecoderCell, self).__init__(**kwargs)
 
     def build_model(self, input_shape):
         hidden_dim = self.hidden_dim
@@ -36,12 +38,12 @@ class LSTMDecoderCell(ExtendedRNNCell):
 
         z = add([W1(x), U(h_tm1)])
         z0, z1, z2, z3 = get_slices(z, 4)
-        i = self.recurrent_activation(z0)
-        f = self.recurrent_activation(z1)
-        c = add([multiply([f, c_tm1]), multiply([i, self.activation(z2)])])
-        o = self.recurrent_activation(z3)
-        h = multiply([o, self.activation(c)])
-        y = self.activation(W2(h))
+        i = Activation(self.recurrent_activation)(z0)
+        f = Activation(self.recurrent_activation)(z1)
+        c = add([multiply([f, c_tm1]), multiply([i, Activation(self.activation)(z2)])])
+        o = Activation(self.recurrent_activation)(z3)
+        h = multiply([o, Activation(self.activation)(c)])
+        y = Activation(self.activation)(W2(h))
 
         return Model([x, h_tm1, c_tm1], [y, h, c])
 
@@ -49,9 +51,11 @@ class LSTMDecoderCell(ExtendedRNNCell):
 class AttentionDecoderCell(ExtendedRNNCell):
 
     def __init__(self, hidden_dim=None, **kwargs):
-        if not hidden_dim:
+        if hidden_dim:
+            self.hidden_dim = hidden_dim
+            kwargs['units'] = hidden_dim
+        else:
             self.hidden_dim = kwargs['units']
-        self.hidden_dim = hidden_dim
         super(AttentionDecoderCell, self).__init__(**kwargs)
 
     def build_model(self, input_shape):
@@ -90,11 +94,11 @@ class AttentionDecoderCell(ExtendedRNNCell):
         x = Lambda(lambda x: K.batch_dot(energy, x, axes=(1, 1)))(H)
         z = add([W1(x), U(h_tm1)])
         z0, z1, z2, z3 = get_slices(z, 4)
-        i = self.recurrent_activation(z0)
-        f = self.recurrent_activation(z0)
-        c = add([multiply([f, c_tm1]), multiply(i, self.activation(z2))])
-        o = self.recurrent_activation(z3)
-        h = multiply([o, self.activation(c)])
-        y = self.activation(W2(h))
+        i = Activation(self.recurrent_activation)(z0)
+        f = Activation(self.recurrent_activation)(z0)
+        c = add([multiply([f, c_tm1]), multiply(i, Activation(self.activation)(z2))])
+        o = Activation(self.recurrent_activation)(z3)
+        h = multiply([o, Activation(self.activation)(c)])
+        y = Activation(self.activation)(W2(h))
 
         return Model([x, h_tm1, c_tm1], [y, h, c])
