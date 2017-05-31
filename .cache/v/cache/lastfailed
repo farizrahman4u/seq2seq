@@ -1,0 +1,3 @@
+{
+  "tests/test.py::test_AttentionSeq2Seq": true
+}

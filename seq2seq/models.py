@@ -229,7 +229,7 @@ def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
 
     The weight alpha[i, j] for each hj is computed as follows:
     energy = a(s(i-1), H(j))
-    alhpa = softmax(energy)
+    alpha = softmax(energy)
     Where a is a feed forward network.
 
     '''
@@ -251,6 +251,9 @@ def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
     if hidden_dim is None:
         hidden_dim = output_dim
 
+    _input = Input(batch_shape=shape)
+    _input._keras_history[0].supports_masking = True
+
     encoder = RecurrentSequential(unroll=unroll, stateful=stateful,
                                   return_sequences=True)
     encoder.add(LSTMCell(hidden_dim, batch_input_shape=(shape[0], shape[2])))
@@ -259,29 +262,28 @@ def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
         encoder.add(Dropout(dropout))
         encoder.add(LSTMCell(hidden_dim))
 
-    _input = Input(batch_shape=shape)
-    _input._keras_history[0].supports_masking = True
-    if bidirectional:
-        encoder = Bidirectional(encoder, merge_mode='sum')
+    # if bidirectional:
+    #     encoder = Bidirectional(encoder, merge_mode='sum')
 
     encoded = encoder(_input)
-
+    if hasattr(encoder, 'model'):
+        print "Bleh"
     decoder = RecurrentSequential(decode=True, output_length=output_length,
                                   unroll=unroll, stateful=stateful)
     decoder.add(Dropout(dropout, batch_input_shape=(shape[0], shape[1], hidden_dim)))
-
     if depth[1] == 1:
         decoder.add(AttentionDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
     else:
         decoder.add(AttentionDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
-
         for _ in range(depth[1] - 2):
             decoder.add(Dropout(dropout))
             decoder.add(LSTMDecoderCell(output_dim=hidden_dim, hidden_dim=hidden_dim))
-            decoder.add(Dropout(dropout))
-            decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
-        inputs = [_input]
-
-        decoded = decoder(encoded)
-        model = Model(inputs, decoded)
-        return model
+        decoder.add(Dropout(dropout))
+        decoder.add(LSTMDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
+    
+    inputs = [_input]
+    decoded = decoder(encoded)
+    if hasattr(decoder, 'model'):
+        print "Decoder check"
+    model = Model(inputs, decoded)
+    return model
