@@ -262,12 +262,14 @@ def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
         encoder.add(Dropout(dropout))
         encoder.add(LSTMCell(hidden_dim))
 
-    # if bidirectional:
-    #     encoder = Bidirectional(encoder, merge_mode='sum')
+    if bidirectional:
+        encoder = Bidirectional(encoder, merge_mode='sum')
+        encoder.forward_layer.build(shape)
+        encoder.backward_layer.build(shape)
+        # patch
+        encoder.layer = encoder.forward_layer
 
     encoded = encoder(_input)
-    if hasattr(encoder, 'model'):
-        print "Bleh"
     decoder = RecurrentSequential(decode=True, output_length=output_length,
                                   unroll=unroll, stateful=stateful)
     decoder.add(Dropout(dropout, batch_input_shape=(shape[0], shape[1], hidden_dim)))
@@ -283,7 +285,5 @@ def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
     
     inputs = [_input]
     decoded = decoder(encoded)
-    if hasattr(decoder, 'model'):
-        print "Decoder check"
     model = Model(inputs, decoded)
     return model
