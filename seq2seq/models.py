@@ -170,7 +170,7 @@ def Seq2Seq(output_dim, output_length, batch_input_shape=None,
     decoder = RecurrentSequential(readout='add' if peek else 'readout_only',
                                   state_sync=inner_broadcast_state, decode=True,
                                   output_length=output_length, unroll=unroll,
-                                  stateful=stateful)
+                                  stateful=stateful, teacher_force=teacher_force)
 
     for _ in range(depth[1]):
         decoder.add(Dropout(dropout, batch_input_shape=(shape[0], output_dim)))
@@ -182,10 +182,11 @@ def Seq2Seq(output_dim, output_length, batch_input_shape=None,
     encoded_seq = dense1(_input)
     encoded_seq = encoder(encoded_seq)
     if broadcast_state:
+        assert type(encoded_seq) is list
         states = encoded_seq[-2:]
         encoded_seq = encoded_seq[0]
     else:
-        states = [None] * 2
+        states = None
     encoded_seq = dense2(encoded_seq)
     inputs = [_input]
     if teacher_force:
