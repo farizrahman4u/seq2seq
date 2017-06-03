@@ -86,15 +86,15 @@ class AttentionDecoderCell(ExtendedRNNCell):
                   kernel_initializer=self.kernel_initializer,
                   kernel_regularizer=self.kernel_regularizer)
 
-        C = Lambda(lambda x: K.repeat(x, input_length))(c_tm1)
+        C = Lambda(lambda x: K.repeat(x, input_length), output_shape=(input_length, input_dim))(c_tm1)
         _xC = concatenate([x, C])
-        _xC = Lambda(lambda x: K.reshape(x, (-1, input_dim + hidden_dim)))(_xC)
+        _xC = Lambda(lambda x: K.reshape(x, (-1, input_dim + hidden_dim)), output_shape=(input_dim + hidden_dim,))(_xC)
 
         alpha = W3(_xC)
-        alpha = Lambda(lambda x: K.reshape(x, (-1, input_length)))(alpha)
+        alpha = Lambda(lambda x: K.reshape(x, (-1, input_length)), output_shape=(input_length,))(alpha)
         alpha = Activation('softmax')(alpha)
 
-        _x = Lambda(lambda x: K.batch_dot(alpha, x, axes=(1, 1)))(x)
+        _x = Lambda(lambda x: K.batch_dot(x[0], x[1], axes=(1, 1)), output_shape=(input_dim,))([alpha, x])
 
         z = add([W1(_x), U(h_tm1)])
 

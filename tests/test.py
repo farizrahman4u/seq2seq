@@ -56,4 +56,4 @@ def test_AttentionSeq2Seq():
 
 	for model in models:
 		model.compile(loss='mse', optimizer='sgd')
-		model.fit(x, y, nb_epoch=1)
+		model.fit(x, y, epochs=1)
