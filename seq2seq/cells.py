@@ -1,111 +1,111 @@
-from recurrentshop import RNNCell, LSTMCell, weight
+import recurrentshop
+from recurrentshop.cells import *
+from keras.models import Model
+from keras.layers import Input, Dense, Lambda, Activation
+from keras.layers import add, multiply, concatenate
 from keras import backend as K
-import numpy as np
 
 
-class LSTMDecoderCell(LSTMCell):
+class LSTMDecoderCell(ExtendedRNNCell):
 
-	def __init__(self, hidden_dim=None, **kwargs):
-		if not hidden_dim:
-			self.hidden_dim = kwargs['output_dim']
-		self.hidden_dim = hidden_dim
-		super(LSTMDecoderCell, self).__init__(**kwargs)
+    def __init__(self, hidden_dim=None, **kwargs):
+        if hidden_dim:
+            self.hidden_dim = hidden_dim
+            kwargs['units'] = hidden_dim
+        else:
+            self.hidden_dim = kwargs['units']
+        super(LSTMDecoderCell, self).__init__(**kwargs)
 
-	def build(self, input_shape):
-		input_dim = input_shape[-1]
-		W1 = weight((input_dim, 4 * self.hidden_dim,), init=self.init, regularizer=self.W_regularizer, name='{}_W1'.format(self.name))
-		W2 = weight((self.hidden_dim, self.output_dim), init=self.init, regularizer=self.W_regularizer, name='{}_W2'.format(self.name))
-		U = weight((self.hidden_dim, 4 * self.hidden_dim,), init=self.inner_init, regularizer=self.U_regularizer, name='{}_U'.format(self.name))
-		b1 = np.concatenate([np.zeros(self.hidden_dim), K.get_value(self.forget_bias_init((self.hidden_dim,))), np.zeros(2 * self.hidden_dim)])
-		b1 = weight(b1, regularizer=self.b_regularizer, name='{}_b1'.format(self.name))
-		b2 = weight((self.output_dim,), init='zero', regularizer=self.b_regularizer, name='{}_b2'.format(self.name))
-		h = (-1, self.hidden_dim)
-		c = (-1, self.hidden_dim)
+    def build_model(self, input_shape):
+        hidden_dim = self.hidden_dim
+        output_dim = self.output_dim
 
-		def step(x, states, weights):
-			h_tm1, c_tm1 = states
-			W1, W2, U, b1, b2 = weights
-			z = K.dot(x, W1) + K.dot(h_tm1, U) + b1
-			z0 = z[:, :self.hidden_dim]
-			z1 = z[:, self.hidden_dim: 2 * self.hidden_dim]
-			z2 = z[:, 2 * self.hidden_dim: 3 * self.hidden_dim]
-			z3 = z[:, 3 * self.hidden_dim:]
-			i = self.inner_activation(z0)
-			f = self.inner_activation(z1)
-			c = f * c_tm1 + i * self.activation(z2)
-			o = self.inner_activation(z3)
-			h = o * self.activation(c)
-			y = self.activation(K.dot(h, W2) + b2)
-			return y, [h, c]
+        x = Input(batch_shape=input_shape)
+        h_tm1 = Input(batch_shape=(input_shape[0], hidden_dim))
+        c_tm1 = Input(batch_shape=(input_shape[0], hidden_dim))
 
-		self.step = step
-		self.states = [h, c]
-		self.weights = [W1, W2, U, b1, b2]
-		super(LSTMCell, self).build(input_shape)
+        W1 = Dense(hidden_dim * 4,
+                   kernel_initializer=self.kernel_initializer,
+                   kernel_regularizer=self.kernel_regularizer,
+                   use_bias=False)
+        W2 = Dense(output_dim,
+                   kernel_initializer=self.kernel_initializer,
+                   kernel_regularizer=self.kernel_regularizer,)
+        U = Dense(hidden_dim * 4,
+                  kernel_initializer=self.kernel_initializer,
+                  kernel_regularizer=self.kernel_regularizer,)
 
-	def get_config(self):
-		config = {'hidden_dim': self.hidden_dim}
-		base_config = super(LSTMDecoderCell, self).get_config()
-		return dict(list(base_config.items()) + list(config.items()))
+        z = add([W1(x), U(h_tm1)])
+
+        z0, z1, z2, z3 = get_slices(z, 4)
+        i = Activation(self.recurrent_activation)(z0)
+        f = Activation(self.recurrent_activation)(z1)
+        c = add([multiply([f, c_tm1]), multiply([i, Activation(self.activation)(z2)])])
+        o = Activation(self.recurrent_activation)(z3)
+        h = multiply([o, Activation(self.activation)(c)])
+        y = Activation(self.activation)(W2(h))
+
+        return Model([x, h_tm1, c_tm1], [y, h, c])
 
 
-class AttentionDecoderCell(LSTMCell):
+class AttentionDecoderCell(ExtendedRNNCell):
 
-	def __init__(self, hidden_dim=None, **kwargs):
-		if not hidden_dim:
-			self.hidden_dim = kwargs['output_dim']
-		self.hidden_dim = hidden_dim
-		super(AttentionDecoderCell, self).__init__(**kwargs)
+    def __init__(self, hidden_dim=None, **kwargs):
+        if hidden_dim:
+            self.hidden_dim = hidden_dim
+            kwargs['units'] = hidden_dim
+        else:
+            self.hidden_dim = kwargs['units']
+        super(AttentionDecoderCell, self).__init__(**kwargs)
 
-	def build(self, input_shape):
-		input_dim = input_shape[-1]
-		input_length = input_shape[1]
-		W1 = weight((input_dim, 4 * self.hidden_dim,), init=self.init, regularizer=self.W_regularizer, name='{}_W1'.format(self.name))
-		W2 = weight((self.hidden_dim, self.output_dim), init=self.init, regularizer=self.W_regularizer, name='{}_W2'.format(self.name))
-		W3 = weight((self.hidden_dim + input_dim, 1), init=self.init, regularizer=self.W_regularizer, name='{}_W3'.format(self.name))
-		U = weight((self.hidden_dim, 4 * self.hidden_dim,), init=self.inner_init, regularizer=self.U_regularizer, name='{}_U'.format(self.name))
-		b1 = np.concatenate([np.zeros(self.hidden_dim), K.get_value(self.forget_bias_init((self.hidden_dim,))), np.zeros(2 * self.hidden_dim)])
-		b1 = weight(b1, regularizer=self.b_regularizer, name='{}_b1'.format(self.name))
-		b2 = weight((self.output_dim,), init='zero', regularizer=self.b_regularizer, name='{}_b2'.format(self.name))
-		b3 = weight((1,), init='zero', regularizer=self.b_regularizer, name='{}_b3'.format(self.name))
-		h = (-1, self.hidden_dim)
-		c = (-1, self.hidden_dim)
+    @property
+    def num_states(self):
+        return 2
 
-		def step(x, states, weights):
-			H = x
-			h_tm1, c_tm1 = states
-			W1, W2, W3, U, b1, b2, b3 = weights
-			input_length = K.shape(x)[1]
-			C = K.repeat(c_tm1, input_length)
-			_HC = K.concatenate([H, C])
-			_HC = K.reshape(_HC, (-1, input_dim + self.hidden_dim))
-			energy = K.dot(_HC, W3) + b3
-			energy = K.reshape(energy, (-1, input_length))
-			energy = K.softmax(energy)
-			x = K.batch_dot(energy, H, axes=(1, 1))
-			z = K.dot(x, W1) + K.dot(h_tm1, U) + b1
-			z0 = z[:, :self.hidden_dim]
-			z1 = z[:, self.hidden_dim: 2 * self.hidden_dim]
-			z2 = z[:, 2 * self.hidden_dim: 3 * self.hidden_dim]
-			z3 = z[:, 3 * self.hidden_dim:]
-			i = self.inner_activation(z0)
-			f = self.inner_activation(z1)
-			c = f * c_tm1 + i * self.activation(z2)
-			o = self.inner_activation(z3)
-			h = o * self.activation(c)
-			y = self.activation(K.dot(h, W2) + b2)
-			return y, [h, c]
+    def build_model(self, input_shape):
+        
+        input_dim = input_shape[-1]
+        output_dim = self.output_dim
+        input_length = input_shape[1]
+        hidden_dim = self.hidden_dim
 
-		self.step = step
-		self.weights = [W1, W2, W3, U, b1, b2, b3]
-		self.states = [h, c]
+        x = Input(batch_shape=input_shape)
+        h_tm1 = Input(batch_shape=(input_shape[0], hidden_dim))
+        c_tm1 = Input(batch_shape=(input_shape[0], hidden_dim))
+        
+        W1 = Dense(hidden_dim * 4,
+                   kernel_initializer=self.kernel_initializer,
+                   kernel_regularizer=self.kernel_regularizer)
+        W2 = Dense(output_dim,
+                   kernel_initializer=self.kernel_initializer,
+                   kernel_regularizer=self.kernel_regularizer)
+        W3 = Dense(1,
+                   kernel_initializer=self.kernel_initializer,
+                   kernel_regularizer=self.kernel_regularizer)
+        U = Dense(hidden_dim * 4,
+                  kernel_initializer=self.kernel_initializer,
+                  kernel_regularizer=self.kernel_regularizer)
 
-		super(RNNCell, self).build(input_shape)
+        C = Lambda(lambda x: K.repeat(x, input_length), output_shape=(input_length, input_dim))(c_tm1)
+        _xC = concatenate([x, C])
+        _xC = Lambda(lambda x: K.reshape(x, (-1, input_dim + hidden_dim)), output_shape=(input_dim + hidden_dim,))(_xC)
 
-	def get_output_shape_for(self, input_shape):
-		return (input_shape[0], self.output_dim)
+        alpha = W3(_xC)
+        alpha = Lambda(lambda x: K.reshape(x, (-1, input_length)), output_shape=(input_length,))(alpha)
+        alpha = Activation('softmax')(alpha)
 
-	def get_config(self):
-		config = {'hidden_dim': self.hidden_dim}
-		base_config = super(AttentionDecoderCell, self).get_config()
-		return dict(list(base_config.items()) + list(config.items()))
+        _x = Lambda(lambda x: K.batch_dot(x[0], x[1], axes=(1, 1)), output_shape=(input_dim,))([alpha, x])
+
+        z = add([W1(_x), U(h_tm1)])
+
+        z0, z1, z2, z3 = get_slices(z, 4)
+
+        i = Activation(self.recurrent_activation)(z0)
+        f = Activation(self.recurrent_activation)(z0)
+
+        c = add([multiply([f, c_tm1]), multiply([i, Activation(self.activation)(z2)])])
+        o = Activation(self.recurrent_activation)(z3)
+        h = multiply([o, Activation(self.activation)(c)])
+        y = Activation(self.activation)(W2(h))
+
+        return Model([x, h_tm1, c_tm1], [y, h, c])
