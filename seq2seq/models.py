@@ -44,12 +44,12 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, input_shape=None,
     if batch_input_shape:
         shape = batch_input_shape
     elif input_shape:
-        shape = (batch_size, ) + input_shape
+        shape = (batch_size,) + input_shape
     elif input_dim:
         if input_length:
-            shape = (batch_size, ) + (input_length, ) + (input_dim, )
+            shape = (batch_size,) + (input_length,) + (input_dim,)
         else:
-            shape = (batch_size, ) + (None, ) + (input_dim)
+            shape = (batch_size,) + (None,) + (input_dim,)
     else:
         # TODO Proper error message
         raise TypeError
@@ -144,12 +144,12 @@ def Seq2Seq(output_dim, output_length, batch_input_shape=None,
     if batch_input_shape:
         shape = batch_input_shape
     elif input_shape:
-        shape = (batch_size, ) + input_shape
+        shape = (batch_size,) + input_shape
     elif input_dim:
         if input_length:
-            shape = (batch_size, ) + (input_length, ) + (input_dim, )
+            shape = (batch_size,) + (input_length,) + (input_dim,)
         else:
-            shape = (batch_size, ) + (None, ) + (input_dim)
+            shape = (batch_size,) + (None,) + (input_dim,)
     else:
         # TODO Proper error message
         raise TypeError
@@ -240,12 +240,12 @@ def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
     if batch_input_shape:
         shape = batch_input_shape
     elif input_shape:
-        shape = (batch_size, ) + input_shape
+        shape = (batch_size,) + input_shape
     elif input_dim:
         if input_length:
-            shape = (batch_size, ) + (input_length, ) + (input_dim, )
+            shape = (batch_size,) + (input_length,) + (input_dim,)
         else:
-            shape = (batch_size, ) + (None, ) + (input_dim)
+            shape = (batch_size,) + (None,) + (input_dim,)
     else:
         # TODO Proper error message
         raise TypeError
