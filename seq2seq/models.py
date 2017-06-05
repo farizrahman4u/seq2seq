@@ -73,7 +73,8 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, input_shape=None,
         for _ in range(depth[1] - 2):
             decoder.add(Dropout(dropout))
             decoder.add(LSTMCell(hidden_dim))
-
+    decoder.add(Dropout(dropout))
+    decoder.add(LSTMCell(output_dim))
 
     _input = Input(batch_shape=shape)
     x = encoder(_input)
