@@ -16,7 +16,7 @@ Papers:
 def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, input_shape=None,
                   batch_size=None, batch_input_shape=None, input_dim=None,
                   input_length=None, depth=1, dropout=0.0, unroll=False,
-                  stateful=False):
+                  stateful=False, readout_activation='linear'):
 
     '''
     Simple model for sequence to sequence learning.
@@ -63,7 +63,8 @@ def SimpleSeq2Seq(output_dim, output_length, hidden_dim=None, input_shape=None,
         encoder.add(LSTMCell(hidden_dim))
 
     decoder = RecurrentSequential(unroll=unroll, stateful=stateful,
-                                  decode=True, output_length=output_length)
+                                  decode=True, output_length=output_length,
+                                  readout_activation=readout_activation )
     decoder.add(Dropout(dropout, batch_input_shape=(shape[0], hidden_dim)))
 
     if depth[1] == 1:
@@ -86,7 +87,7 @@ def Seq2Seq(output_dim, output_length, batch_input_shape=None,
             input_shape=None, batch_size=None, input_dim=None, input_length=None,
             hidden_dim=None, depth=1, broadcast_state=True, unroll=False,
             stateful=False, inner_broadcast_state=True, teacher_force=False,
-            peek=False, dropout=0.):
+            peek=False, dropout=0, readout_activation='linear'):
 
     '''
     Seq2seq model based on [1] and [2].
@@ -171,7 +172,8 @@ def Seq2Seq(output_dim, output_length, batch_input_shape=None,
     decoder = RecurrentSequential(readout='add' if peek else 'readout_only',
                                   state_sync=inner_broadcast_state, decode=True,
                                   output_length=output_length, unroll=unroll,
-                                  stateful=stateful, teacher_force=teacher_force)
+                                  stateful=stateful, teacher_force=teacher_force,
+                                  readout_activation=readout_activation )
 
     for _ in range(depth[1]):
         decoder.add(Dropout(dropout, batch_input_shape=(shape[0], output_dim)))
@@ -209,7 +211,8 @@ def Seq2Seq(output_dim, output_length, batch_input_shape=None,
 def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
                      batch_size=None, input_shape=None, input_length=None,
                      input_dim=None, hidden_dim=None, depth=1,
-                     bidirectional=True, unroll=False, stateful=False, dropout=0.0,):
+                     bidirectional=True, unroll=False, stateful=False,
+                     dropout=0.0, readout_activation='linear'):
     '''
     This is an attention Seq2seq model based on [3].
     Here, there is a soft allignment between the input and output sequence elements.
@@ -273,7 +276,8 @@ def AttentionSeq2Seq(output_dim, output_length, batch_input_shape=None,
 
     encoded = encoder(_input)
     decoder = RecurrentSequential(decode=True, output_length=output_length,
-                                  unroll=unroll, stateful=stateful)
+                                  unroll=unroll, stateful=stateful,
+                                  readout_activation=readout_activation )
     decoder.add(Dropout(dropout, batch_input_shape=(shape[0], shape[1], hidden_dim)))
     if depth[1] == 1:
         decoder.add(AttentionDecoderCell(output_dim=output_dim, hidden_dim=hidden_dim))
