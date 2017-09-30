@@ -9,11 +9,11 @@ from keras import backend as K
 class LSTMDecoderCell(ExtendedRNNCell):
 
     def __init__(self, hidden_dim=None, **kwargs):
+        super(LSTMDecoderCell, self).__init__(**kwargs)
         if hidden_dim:
             self.hidden_dim = hidden_dim
         else:
             self.hidden_dim = self.output_dim
-        super(LSTMDecoderCell, self).__init__(**kwargs)
 
     def build_model(self, input_shape):
         hidden_dim = self.hidden_dim
