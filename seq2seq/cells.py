@@ -9,13 +9,15 @@ from keras import backend as K
 class LSTMDecoderCell(ExtendedRNNCell):
 
     def __init__(self, hidden_dim=None, **kwargs):
-        if hidden_dim:
-            self.hidden_dim = hidden_dim
+
+
+        super(LSTMDecoderCell, self).__init__(**kwargs)
 
         # we have no output_dim prior to calling parent constructor:
-        #else:
-        #    self.hidden_dim = self.output_dim
-        super(LSTMDecoderCell, self).__init__(**kwargs)
+        if hidden_dim:
+            self.hidden_dim = hidden_dim
+        else:
+            self.hidden_dim = self.output_dim        
 
     def build_model(self, input_shape):
         hidden_dim = self.hidden_dim
@@ -48,6 +50,11 @@ class LSTMDecoderCell(ExtendedRNNCell):
 
         return Model([x, h_tm1, c_tm1], [y, h, c])
 
+    def get_config(self):
+        config = {'hidden_dim': self.hidden_dim}
+        base_config = super(ExtendedRNNCell, self).get_config()
+        config.update(base_config)
+        return config
 
 class AttentionDecoderCell(ExtendedRNNCell):
 
