@@ -97,7 +97,7 @@ class AttentionDecoderCell(ExtendedRNNCell):
         z0, z1, z2, z3 = get_slices(z, 4)
 
         i = Activation(self.recurrent_activation)(z0)
-        f = Activation(self.recurrent_activation)(z0)
+        f = Activation(self.recurrent_activation)(z1)
 
         c = add([multiply([f, c_tm1]), multiply([i, Activation(self.activation)(z2)])])
         o = Activation(self.recurrent_activation)(z3)
