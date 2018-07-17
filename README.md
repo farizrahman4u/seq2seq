@@ -99,6 +99,10 @@ That's all for now. Hope you love this library. For any questions you might have
 
 **Installation:**
 
+Install `recurrentshop`, a dependency not on pypi.python.org, and `seq2seq` via 
+
+```sudo pip install git+https://github.com/farizrahman4u/recurrentshop.git```
+
 ```sudo pip install git+https://github.com/farizrahman4u/seq2seq.git```
 
 
