@@ -58,7 +58,7 @@ model.compile(loss='mse', optimizer='rmsprop')
 
 Note that we had to specify the complete input shape, including the samples dimensions. This is because we need a static hidden state(similar to a stateful RNN) for transferring it across layers. (Update : Full input shape is not required in the latest version, since we switched to Recurrent Shop backend). By the way, Seq2Seq models also support the `stateful` argument, in case you need it.
 
-You can also experiment with the hidden state propogation turned  off. Simply set the arguments `broadcast_state` and `inner_broadcast_state` to `False`.
+You can also experiment with the hidden state propagation turned  off. Simply set the arguments `broadcast_state` and `inner_broadcast_state` to `False`.
 
 **Peeky Seq2seq model**:
 
@@ -80,7 +80,7 @@ model.compile(loss='mse', optimizer='rmsprop')
 
 ![Attention Seq2seq](http://i64.tinypic.com/a2rw3d.png)
 
-Let's not stop there either. In all the models described above, there is no allignment between the input sequence elements and the output sequence elements. But for machine translation, learning a soft allignment between the input and output sequences imporves performance.[[3]](http://arxiv.org/pdf/1409.0473v6.pdf). The Seq2seq framework includes a ready made attention model which does the same. Note that in the attention model, there is no hidden state propogation, and a bidirectional LSTM encoder is used by default. Example:
+Let's not stop there either. In all the models described above, there is no allignment between the input sequence elements and the output sequence elements. But for machine translation, learning a soft allignment between the input and output sequences imporves performance.[[3]](http://arxiv.org/pdf/1409.0473v6.pdf). The Seq2seq framework includes a ready made attention model which does the same. Note that in the attention model, there is no hidden state propagation, and a bidirectional LSTM encoder is used by default. Example:
 
 ```python
 import seq2seq
