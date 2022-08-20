@@ -6,7 +6,7 @@ Sequence to Sequence Learning with Keras
 **Hi!** You have just found Seq2Seq. Seq2Seq is a sequence to sequence learning add-on for the python deep learning library [Keras](http://www.keras.io). Using Seq2Seq, you can build and train sequence-to-sequence neural network models in Keras. Such models are useful for machine translation, chatbots (see [[4]](http://arxiv.org/pdf/1506.05869v1.pdf)), parsers, or whatever that comes to your mind.
 
 
-  ![seq2seq](http://i64.tinypic.com/30136te.png)
+  
 
 # Getting started
 
