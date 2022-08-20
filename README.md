@@ -64,7 +64,6 @@ You can also experiment with the hidden state propogation turned  off. Simply se
 
 Let's not stop there. Let's build a model similar to [cho et al 2014](http://arxiv.org/abs/1406.1078), where the decoder gets a 'peek' at the context vector at every timestep.
 
-![cho et al 2014](http://i64.tinypic.com/302aqhi.png)
 
 To achieve this, simply add the argument `peek=True`:
 
@@ -78,7 +77,6 @@ model.compile(loss='mse', optimizer='rmsprop')
 
 **Seq2seq model with attention:**
 
-![Attention Seq2seq](http://i64.tinypic.com/a2rw3d.png)
 
 Let's not stop there either. In all the models described above, there is no allignment between the input sequence elements and the output sequence elements. But for machine translation, learning a soft allignment between the input and output sequences imporves performance.[[3]](http://arxiv.org/pdf/1409.0473v6.pdf). The Seq2seq framework includes a ready made attention model which does the same. Note that in the attention model, there is no hidden state propogation, and a bidirectional LSTM encoder is used by default. Example:
 
