@@ -78,7 +78,7 @@ model.compile(loss='mse', optimizer='rmsprop')
 **Seq2seq model with attention:**
 
 
-Let's not stop there either. In all the models described above, there is no allignment between the input sequence elements and the output sequence elements. But for machine translation, learning a soft allignment between the input and output sequences imporves performance.[[3]](http://arxiv.org/pdf/1409.0473v6.pdf). The Seq2seq framework includes a ready made attention model which does the same. Note that in the attention model, there is no hidden state propogation, and a bidirectional LSTM encoder is used by default. Example:
+Let's not stop there either. In all the models described above, there is no allignment between the input sequence elements and the output sequence elements. But for machine translation, learning a soft allignment between the input and output sequences improves performance.[[3]](http://arxiv.org/pdf/1409.0473v6.pdf). The Seq2seq framework includes a ready made attention model which does the same. Note that in the attention model, there is no hidden state propogation, and a bidirectional LSTM encoder is used by default. Example:
 
 ```python
 import seq2seq
